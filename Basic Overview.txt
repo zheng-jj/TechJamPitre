@@ -23,11 +23,11 @@ llm
 
 dataset
 	law
-		country, region, law, department, law desc, relevant labels, source
+		country, region, law, law desc, relevant labels, source
 	feature
-		feature name, feature type, feature description, relevant labels
+		feature name, feature type, feature description, relevant labels, source
 	jargon
-		abbreviation, full form, relevant labels
+		abbreviation, full form, relevant labels, source
 
 report generation for emails
 	sent to relevant stakeholders
