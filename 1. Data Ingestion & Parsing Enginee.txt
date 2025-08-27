@@ -1,0 +1,39 @@
+1. Data Ingestion & Parsing Engineer (JO)
+
+    Build scraper scripts (or manual import tools) to load law texts and feature specs into raw storage.
+
+    Implement the Jargon-Normalization Agent pipeline: simple rule-based or LLM-prompted expansion of abbreviations. rag
+	
+    Fine-tune the Law-Mapping Agent on existing feature→law mappings and the Feature-Impact Agent on law→feature mappings. rag
+
+    Populate initial law and feature datasets (e.g., local JSON/SQLite). coming up with format for datasets
+
+    Develop the Parser Agent to convert raw law and feature text into structured JSON records (fields: name, description, labels). instruction
+
+2. Model Fine-Tuning Engineer (jj)
+
+    Create a minimal React/Next.js UI for: (react) 
+
+        Uploading a feature spec or law text.
+
+        Viewing the returned list of relevant laws or impacted features.
+
+        CRUD interface for assigning recipients to feature–law pairs.
+    
+3. Orchestration & Inference Engineer (zihui)
+
+    Build a lightweight orchestrator service (e.g., Express.js or Go) that: restapi (go)
+
+        Accepts new feature or law uploads via HTTP.
+
+        Invokes the appropriate agent with RAG-style context retrieval (simple vector store using FAISS).
+
+        Parses agent output (JSON list of relevant law IDs or feature IDs) and writes back to datasets.
+
+    Implement revamp logic: detect and remove obsolete law–feature links when new mappings supersede old ones. (use jo law -> data parser, compare the new law with existing dataset) (come up w ur own solution)
+
+4. Frontend & Report-Generation Engineer (jarren)
+
+    Create scripts to ingest new JSON records and adding to rag dataset
+
+    Implement a simple report generator that formats each new mapping into an email-style summary for download or copy-paste. 

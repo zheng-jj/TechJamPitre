@@ -1,0 +1,13 @@
+upload new law (document) -http request to backend-> processing (file -> parser -> json -> compare with existing dataset -> replace if necessary -> law model -> affected features) -> view affected features -> option to download pdf
+upload new feature (document) -http request to backend-> processing (file -> parser -> json -> compare with existing dataset -> replace if necessary -> feature model -> affected laws) -> view report on site -> option to download pdf
+
+view all features
+view all laws
+
+dataset
+	law
+		country, region, law, law desc, relevant labels, source
+	feature
+		feature name, feature type, feature description, relevant labels, source
+	jargon
+		abbreviation, full form, relevant labels, source

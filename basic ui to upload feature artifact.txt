@@ -1,0 +1,35 @@
+basic ui to upload feature artifact
+	if new feature, add it to feature dataset
+view report
+crud list of recipients
+basic roles/etc who is this feature relevant to, etc
+
+llm
+
+	agent for laws regulation RAG
+		input (new feature), output (list of laws)
+
+	agent for existing features RAG
+		input (law), output (features that are relevant to law)
+
+	solution to compare if law already exist (eg. revamp), remove old law from dataset RAG
+		by communicating with the law regulation agent, update law dataset
+
+	agent for jargon(?) RAG
+		if new jargon, update jargon dataset
+
+	agent to parse new data to be added to dataset instruction llm -> input -> json
+		fixed format, break it down into further labels.
+
+dataset
+	law
+		country, region, law, department, law desc, relevant labels, source
+	feature
+		feature name, feature type, feature description, relevant labels
+	jargon
+		abbreviation, full form, relevant labels
+
+report generation for emails
+	sent to relevant stakeholders
+law scraping
+	sent to llm, automated fine tuning of law regulation agent and law jargon agent
