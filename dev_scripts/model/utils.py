@@ -2,12 +2,12 @@ from langchain_core.documents import Document
 import json
 
 def law_to_document(jsonl_string):
-    json_list = jsonl_string.split("\n")
-    return [Document(json, metadata={"id", j.loads(j)["id"]}) for j in json_list]
+    json_list = jsonl_string.strip().split("\n")
+    return [Document(j, metadata={"id": json.loads(j)["id"]}) for j in json_list]
 
 def feature_to_document(features, compliances, data_dictionary):
     all_docs = []
-    project_dictionary = project_dictionary.append(json.loads(line))
+    project_dictionary = []
     for line in data_dictionary.strip().split("\n"):
         project_dictionary.append(json.loads(line))
 
@@ -24,14 +24,17 @@ def feature_to_document(features, compliances, data_dictionary):
         feature = json.loads(line)
         
         content = (
-            f"**Project:** {feature.get('project_name', 'N/A')}\n\n"
-            f"**Feature Title:** {feature.get('feature_title', 'N/A')}\n"
-            f"**Feature Type:** {feature.get('feature_type', 'N/A')}\n"
-            f"**Description:**\n{feature.get('feature_description', '')}\n\n"
+            f"Project: {feature.get('project_name', 'N/A')}\n\n"
+            f"Project ID: {feature.get('project_id', 'N/A')}\n\n"
+            f"Feature Title: {feature.get('feature_title', 'N/A')}\n"
+            f"Feature Type: {feature.get('feature_type', 'N/A')}\n"
+            f"Feature ID: {feature.get('feature_id', 'N/A')}\n"
+            f"Feature Description:\n{feature.get('feature_description', '')}\n\n"
             f"--- Project Data Dictionary ---\n{dict_context}\n\n"
-            f"--- Project Compliance Rules ---\n{comp_context}"
+            f"--- Project Compliance Rules ---\n{comp_context}\n"
+            f"Source File: {feature.get('reference_file', 'N/A')}"
         )
-        
+
         metadata = {
             "project_name": feature.get('project_name'),
             "project_id": feature.get('project_id'),
