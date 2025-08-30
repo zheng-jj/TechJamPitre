@@ -1,0 +1,202 @@
+[
+  {
+    "law_id": "EU-ALL-GDPR-2018",
+    "country": "European Union",
+    "region": "ALL",
+    "law": "General Data Protection Regulation (GDPR)",
+    "year": 2018,
+    "law_desc": "A comprehensive data protection law that governs the processing of personal data of individuals within the EU. It emphasizes data subject rights, data protection by design, and requires explicit consent for data collection.",
+    "relevant_labels": ["data privacy", "consumer rights", "consent management", "cross-border data"],
+    "source": "https://gdpr-info.eu/"
+  },
+  {
+    "law_id": "USA-CA-CCPA-2020",
+    "country": "USA",
+    "region": "California",
+    "law": "California Consumer Privacy Act (CCPA)",
+    "year": 2020,
+    "law_desc": "Grants California consumers robust data privacy rights, including the right to know what personal information is collected, the right to delete it, and the right to opt-out of its sale.",
+    "relevant_labels": ["data privacy", "consumer rights", "data collection"],
+    "source": "https://oag.ca.gov/privacy/ccpa"
+  },
+  {
+    "law_id": "USA-CA-CPRA-2023",
+    "country": "USA",
+    "region": "California",
+    "law": "California Privacy Rights Act (CPRA)",
+    "year": 2023,
+    "law_desc": "Amends and expands the CCPA, establishing the California Privacy Protection Agency and adding the right to correct inaccurate personal information and the right to limit use of sensitive personal information.",
+    "relevant_labels": ["data privacy", "consumer rights", "sensitive data"],
+    "source": "https://cppa.ca.gov/"
+  },
+  {
+    "law_id": "BRA-ALL-LGPD-2020",
+    "country": "Brazil",
+    "region": "ALL",
+    "law": "Lei Geral de Proteção de Dados (LGPD)",
+    "year": 2020,
+    "law_desc": "Brazil's general data protection law, inspired by the GDPR. It regulates the processing of personal data of individuals in Brazil, regardless of where the data processor is located.",
+    "relevant_labels": ["data privacy", "consent management"],
+    "source": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm"
+  },
+  {
+    "law_id": "CHN-ALL-PIPL-2021",
+    "country": "China",
+    "region": "ALL",
+    "law": "Personal Information Protection Law (PIPL)",
+    "year": 2021,
+    "law_desc": "China's comprehensive data privacy law, which places strict conditions on data processing and cross-border data transfers. Requires separate consent for different processing activities.",
+    "relevant_labels": ["data privacy", "cross-border data", "consent management"],
+    "source": "http://www.npc.gov.cn/npc/c30834/202108/a8c4e3672c74491a80b53a172bb753fe.shtml"
+  },
+  {
+    "law_id": "EU-ALL-AI_ACT-2024",
+    "country": "European Union",
+    "region": "ALL",
+    "law": "EU AI Act",
+    "year": 2024,
+    "law_desc": "A landmark regulation that categorizes AI systems by risk. It bans 'unacceptable risk' systems and imposes strict requirements on 'high-risk' systems regarding data quality, transparency, and human oversight.",
+    "relevant_labels": ["ai governance", "risk management", "transparency", "automated decision-making"],
+    "source": "https://artificialintelligenceact.eu/"
+  },
+  {
+    "law_id": "USA-FED-HIPAA-1996",
+    "country": "USA",
+    "region": "Federal",
+    "law": "Health Insurance Portability and Accountability Act (HIPAA)",
+    "year": 1996,
+    "law_desc": "A federal law that required the creation of national standards to protect sensitive patient health information from being disclosed without the patient's consent or knowledge.",
+    "relevant_labels": ["health data", "sensitive data", "data security"],
+    "source": "https://www.hhs.gov/hipaa/index.html"
+  },
+  {
+    "law_id": "USA-FED-COPPA-1998",
+    "country": "USA",
+    "region": "Federal",
+    "law": "Children's Online Privacy Protection Act (COPPA)",
+    "year": 1998,
+    "law_desc": "Imposes certain requirements on operators of websites or online services directed to children under 13 years of age, and on operators of other websites or online services that have actual knowledge that they are collecting personal information online from a child under 13.",
+    "relevant_labels": ["children's data", "data privacy", "consent management"],
+    "source": "https://www.ftc.gov/legal-library/browse/rules/childrens-online-privacy-protection-rule-coppa"
+  },
+  {
+    "law_id": "CAN-ALL-PIPEDA-2000",
+    "country": "Canada",
+    "region": "ALL",
+    "law": "Personal Information Protection and Electronic Documents Act (PIPEDA)",
+    "year": 2000,
+    "law_desc": "Canada's federal privacy law for private-sector organizations. It governs how businesses handle personal information in the course of their commercial activities.",
+    "relevant_labels": ["data privacy", "data collection"],
+    "source": "https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/"
+  },
+  {
+    "law_id": "AUS-ALL-PRIVACY_ACT-1988",
+    "country": "Australia",
+    "region": "ALL",
+    "law": "Privacy Act 1988",
+    "year": 1988,
+    "law_desc": "The principal piece of Australian legislation protecting the handling of personal information about individuals. This includes the collection, use, storage, and disclosure of personal information in the federal public sector and in the private sector.",
+    "relevant_labels": ["data privacy", "data security"],
+    "source": "https://www.oaic.gov.au/privacy/privacy-act"
+  },
+  {
+    "law_id": "EU-ALL-DORA-2025",
+    "country": "European Union",
+    "region": "ALL",
+    "law": "Digital Operational Resilience Act (DORA)",
+    "year": 2025,
+    "law_desc": "A regulation aimed at strengthening the IT security of financial entities such as banks, insurance companies, and investment firms. It establishes uniform requirements for the security of network and information systems.",
+    "relevant_labels": ["financial data", "data security", "risk management", "cybersecurity"],
+    "source": "https://www.europarl.europa.eu/doceo/document/TA-9-2022-0381_EN.html"
+  },
+  {
+    "law_id": "IND-ALL-DPDP-2023",
+    "country": "India",
+    "region": "ALL",
+    "law": "Digital Personal Data Protection Act (DPDP Act)",
+    "year": 2023,
+    "law_desc": "India's comprehensive data protection framework that regulates the processing of digital personal data. It outlines the rights of individuals (Data Principals) and the obligations of data fiduciaries.",
+    "relevant_labels": ["data privacy", "consent management"],
+    "source": "https://www.meity.gov.in/content/digital-personal-data-protection-act-2023"
+  },
+  {
+    "law_id": "USA-VA-VCDPA-2023",
+    "country": "USA",
+    "region": "Virginia",
+    "law": "Virginia Consumer Data Protection Act (VCDPA)",
+    "year": 2023,
+    "law_desc": "Provides consumers in Virginia with rights to access, correct, delete, and obtain a copy of personal data, and to opt out of the processing of personal data for purposes of targeted advertising.",
+    "relevant_labels": ["data privacy", "consumer rights"],
+    "source": "https://lis.virginia.gov/cgi-bin/legp604.exe?212+ful+CHAP0035"
+  },
+  {
+    "law_id": "SGP-ALL-PDPA-2012",
+    "country": "Singapore",
+    "region": "ALL",
+    "law": "Personal Data Protection Act (PDPA)",
+    "year": 2012,
+    "law_desc": "Governs the collection, use, and disclosure of personal data by organisations. It recognizes both the rights of individuals to protect their personal data and the needs of organisations to collect, use, or disclose personal data for legitimate and reasonable purposes.",
+    "relevant_labels": ["data privacy", "data collection"],
+    "source": "https://www.pdpc.gov.sg/overview-of-pdpa/the-legislation/personal-data-protection-act"
+  },
+  {
+    "law_id": "UK-ALL-OSA-2025",
+    "country": "United Kingdom",
+    "region": "ALL",
+    "law": "Online Safety Act (OSA)",
+    "year": 2025,
+    "law_desc": "Aims to make online spaces safer by requiring online services, including social media platforms, to moderate illegal and harmful content, protect children online, and provide users with tools to control the content they see.",
+    "relevant_labels": ["content moderation", "children's data", "digital services"],
+    "source": "https://www.gov.uk/government/collections/online-safety-bill"
+  },
+  {
+    "law_id": "USA-CO-CPA-2023",
+    "country": "USA",
+    "region": "Colorado",
+    "law": "Colorado Privacy Act (CPA)",
+    "year": 2023,
+    "law_desc": "Grants Colorado residents rights over their personal data, including rights of access, correction, deletion, and data portability. It also provides a right to opt out of targeted advertising and the sale of personal data.",
+    "relevant_labels": ["data privacy", "consumer rights"],
+    "source": "https://coag.gov/resources/colorado-privacy-act/"
+  },
+  {
+    "law_id": "EU-ALL-DATA_ACT-2025",
+    "country": "European Union",
+    "region": "ALL",
+    "law": "EU Data Act",
+    "year": 2025,
+    "law_desc": "Aims to ensure fairness in the digital environment by regulating access to and use of data generated by connected devices (IoT). It allows users of connected devices to access the data they generate.",
+    "relevant_labels": ["data sharing", "iot", "digital services"],
+    "source": "https://digital-strategy.ec.europa.eu/en/policies/data-act"
+  },
+  {
+    "law_id": "ZAF-ALL-POPIA-2013",
+    "country": "South Africa",
+    "region": "ALL",
+    "law": "Protection of Personal Information Act (POPIA)",
+    "year": 2013,
+    "law_desc": "South Africa's data protection law that aims to protect personal information processed by public and private bodies. It promotes the protection of personal information and balances it against other rights like access to information.",
+    "relevant_labels": ["data privacy", "data protection"],
+    "source": "https://popia.co.za/"
+  },
+  {
+    "law_id": "JPN-ALL-APPI-2003",
+    "country": "Japan",
+    "region": "ALL",
+    "law": "Act on the Protection of Personal Information (APPI)",
+    "year": 2003,
+    "law_desc": "Japan's primary data protection law. It regulates the handling of personal information by private businesses and has been amended several times to align more closely with international standards like the GDPR.",
+    "relevant_labels": ["data privacy", "data collection"],
+    "source": "https://www.ppc.go.jp/en/legal/"
+  },
+  {
+    "law_id": "USA-IL-BIPA-2008",
+    "country": "USA",
+    "region": "Illinois",
+    "law": "Biometric Information Privacy Act (BIPA)",
+    "year": 2008,
+    "law_desc": "A pioneering Illinois state law that regulates the collection, use, and handling of biometric identifiers and information by private entities. Requires informed written consent before collecting biometric data like fingerprints or facial scans.",
+    "relevant_labels": ["biometric data", "sensitive data", "consent management"],
+    "source": "https://www.ilga.gov/legislation/ilcs/ilcs3.asp?ActID=3004&ChapterID=57"
+  }
+]
