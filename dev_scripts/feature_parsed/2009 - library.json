@@ -1,0 +1,470 @@
+{
+    "project_name": "Software Requirements Specification for the System Administration of an Integrated Library System",
+    "features": [
+        {
+            "feature_title": "ILS Configuration Management",
+            "feature_description": "Configuring the ILS to enable and support features and processes required for management of the Library branches, patrons, collections, and circulation transactions.",
+            "feature_type": "System Administration Core"
+        },
+        {
+            "feature_title": "Server Performance Monitoring and Control",
+            "feature_description": "Monitoring, troubleshooting, and controlling server performance.",
+            "feature_type": "System Administration Core"
+        },
+        {
+            "feature_title": "Database and Application Performance Monitoring and Control",
+            "feature_description": "Monitoring, troubleshooting, and controlling database and application performance.",
+            "feature_type": "System Administration Core"
+        },
+        {
+            "feature_title": "Services, Ports, and API Monitoring and Control",
+            "feature_description": "Monitoring, troubleshooting, and controlling services, ports, and application programming interfaces.",
+            "feature_type": "System Administration Core"
+        },
+        {
+            "feature_title": "User and Group Account Privilege Management",
+            "feature_description": "Managing user and group accounts and privileges.",
+            "feature_type": "System Administration Core"
+        },
+        {
+            "feature_title": "Software Installation and Update Management",
+            "feature_description": "Managing server and client software installation, upgrades, and updates.",
+            "feature_type": "System Administration Core"
+        },
+        {
+            "feature_title": "Database and File Backup Management",
+            "feature_description": "Backing up databases, configuration files, log files, etc.",
+            "feature_type": "System Administration Core"
+        },
+        {
+            "feature_title": "Web and Windows Client Accessibility",
+            "feature_description": "System Administration shall be accessible through a web-browser or a Windows-compatible client.",
+            "feature_type": "Accessibility"
+        },
+        {
+            "feature_title": "Assistive Software Accessibility",
+            "feature_description": "System Administration shall be accessible with screen-reading software, screen-magnification software, and other software programs designed to increase accessibility.",
+            "feature_type": "Accessibility"
+        },
+        {
+            "feature_title": "Development and Training Environment Provision",
+            "feature_description": "System Administration Module shall provide a development and training environment with the ability to migrate configurations to a production environment.",
+            "feature_type": "Environment Management"
+        },
+        {
+            "feature_title": "Online Help System",
+            "feature_description": "The system shall provide an online, hierarchical, and cross-linked help system in HTML that describes and illustrates all system functions.",
+            "feature_type": "Documentation"
+        },
+        {
+            "feature_title": "Vendor Website Integration",
+            "feature_description": "The System Administration Module interface with a variety of vendor websites, via published APIs and/or automated transfer of standard-format data files (e.g. USMARC21, EDIFACT).",
+            "feature_type": "Integration"
+        },
+        {
+            "feature_title": "Patron Interface (OPAC) Interaction",
+            "feature_description": "The System Administration Module interacts with a patron interface, also known as an Online Public Access Catalog (OPAC).",
+            "feature_type": "Integration"
+        },
+        {
+            "feature_title": "SQL-based database",
+            "feature_description": "System runs on a fully relational, SQL-based database system. Ability to run SQL queries against any table in the database. Ability to access database as an ODBC source. All data tables and data storage are fully accessible.",
+            "feature_type": "Systems: General"
+        },
+        {
+            "feature_title": "real-time processing",
+            "feature_description": "The system provides real-time processing. For example: pull lists are up to date at time of viewing or printing; system supports live shelf reading and weeding.",
+            "feature_type": "Systems: General"
+        },
+        {
+            "feature_title": "field and record sharing",
+            "feature_description": "Ability for multiple staff members and patrons to simultaneously access and update patron and item records, including on staff check-in and check-out terminals, on self check-out stations, through SIP2/NCIP2 and similar protocols and APIs, and in OPAC. Depending on assigned privileges, staff can view all patron and item fields; patrons can access only selected fields. Record changes are applied in a reasonable way, with prompts to warn when a record has been changed since it was displayed.",
+            "feature_type": "Systems: General"
+        },
+        {
+            "feature_title": "record lock management",
+            "feature_description": "For any patron record or item record, staff can identify where it is in use (location, user, date and time placed).",
+            "feature_type": "Systems: General"
+        },
+        {
+            "feature_title": "individual and shared staff login accounts",
+            "feature_description": "Support for individual and shared staff login accounts; access to modules is granted by use of \"roles\" or \"privileges\" that allow each account to access as many (or as few) modules as needed. Individual logins allow user-level preferences and audit trail.",
+            "feature_type": "Systems: General"
+        },
+        {
+            "feature_title": "system documentation",
+            "feature_description": "System documentation is library-specific and follows standard formats for technical documentation. Documentation is specific to the particular version of the software in use at library. Documentation is web-based, indexed, organized by function, and easily searchable.",
+            "feature_type": "Systems: General"
+        },
+        {
+            "feature_title": "system upgrade guidelines",
+            "feature_description": "System upgrades and updates include written guidelines for updating servers and clients. Includes list of new, changed, and removed features.",
+            "feature_type": "Systems: General"
+        },
+        {
+            "feature_title": "configuration file access",
+            "feature_description": "System provides access to all configuration files.",
+            "feature_type": "Systems: General"
+        },
+        {
+            "feature_title": "log file access",
+            "feature_description": "System provides full access to all log files. Log files can be reviewed without stopping system. Logs can be enabled, disabled, and set to a specific retention threshold.",
+            "feature_type": "Systems: General"
+        },
+        {
+            "feature_title": "root shell access",
+            "feature_description": "System provides access to root shell.",
+            "feature_type": "Systems: General"
+        },
+        {
+            "feature_title": "dashboard configuration",
+            "feature_description": "System supports creation of custom dashboards that display current and historical data about system performance, record creation and modification, circulation transactions, etc. Administrators can create dashboards and give access to selected users and groups.",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "system monitoring",
+            "feature_description": "System provides full support for SNMP and supports monitoring of system resources, including disk space, CPU load, memory load, system processes, system interfaces and ports. Alert thresholds are configurable. Alerts can be sent via administrative dashboards, email messages, and text messages. Alerts can be sent to unlimited number of recipients via any or all alert methods.",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "record lock administration",
+            "feature_description": "Ability to set thresholds on the length of time records are locked and provide, for all record types, a list of records in sustained use/locked condition. Ability from the same console to unlock one or more records.",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "system performance dashboard",
+            "feature_description": "System provides dashboard of performance monitoring and management tools. Identification of processes with process ID, owner username, IP address (if applicable), CPU utilization, memory utilization, run time. Runaway processes are identified. System status is represented by visual indicators (e.g. green and red lights).",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "server console",
+            "feature_description": "System provides a server management console including: software shutdown utility, software startup utility, server shutdown utility, server restart utility.",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "application dashboard",
+            "feature_description": "System provides an administrative dashboard displaying: last full and incremental backup; last planned and unplanned system reboot; last software upgrade; current software version; transactions waiting to be processed; size of log-files; current count of records by record type (item, bibliographic, patron etc), database utilization (size, processes running).",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "client management console",
+            "feature_description": "System provides a management console displaying workstations running client software; workstation name and IP address; and utilities for managing and killing client sessions.",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "circulation dashboard",
+            "feature_description": "System provides a circulation dashboard showing key performance indicators such as check-outs per hour, check-ins per hour, holds placed per hour, holds paged per day, etc. Indicators can be limited to a single branch or set to systemwide.",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "configuration file console",
+            "feature_description": "System provides a single console with access to all configuration files. Read and write permission to individual configuration files can be assigned to users and groups.",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "log-file dashboard",
+            "feature_description": "System provides a dashboard for locating and viewing log files.",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "job scheduling console",
+            "feature_description": "System provides a single interface for reviewing and controlling scheduled tasks, including staff-scheduled tasks, automated reports, scheduled imports and exports, software updates, etc.",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "email configuration",
+            "feature_description": "Ability to access and edit email configuration, including a quick menu of common settings (such as masquerading, log retention, bounce management).",
+            "feature_type": "Systems: Consoles and Dashboards"
+        },
+        {
+            "feature_title": "SMTP support",
+            "feature_description": "System supports SMTP for email transport.",
+            "feature_type": "Systems: Business Rules"
+        },
+        {
+            "feature_title": "business rules",
+            "feature_description": "System supports restrictions based on business rules, e.g. restrictions on deleting item records that are in checked-out status, or restrictions on deleting bibliographic records with existing holds.",
+            "feature_type": "Systems: Business Rules"
+        },
+        {
+            "feature_title": "suppression rules",
+            "feature_description": "System provides customizable 'Rules of Suppression' that specify whether patrons and staff can view authority, bibliographic, order, and item records in staff and public (OPAC) interfaces. Records may be visible to specific workgroups only; to all staff and patrons at specific locations; or to all staff and all patrons. (See REQ-5057 for related requirements on loan rules, and REQ-5190 for related requirements on holdability.)",
+            "feature_type": "Systems: Business Rules"
+        },
+        {
+            "feature_title": "requesting rules",
+            "feature_description": "System allows creation and modification of requesting rules that determine whether a patron can place a hold on an item. Requesting rules may evaluate patron type, current number of holds, current patron account balance, item type, item status, owning location code, and other criteria. For example, requesting rules may prohibit patrons from placing holds on on-order CD titles, but allow patrons to place holds on other on-order titles. Requesting rules also specify whether staff with specific privileges or roles can override specific criteria. (See REQ-5057 re loan rules, REQ-5278 re visibility.)",
+            "feature_type": "Systems: Business Rules"
+        },
+        {
+            "feature_title": "loan rules",
+            "feature_description": "System allows creation and modification of loan rules that allow or disallow check-out of items, calculate loan periods, and determine renewal limits. Loan rules may evaluate patron type, current number of items checked out, current patron account balance, item type, item status, owning location code, check-out location code, and other criteria. For example, loan rules may prohibit patrons from checking out items with an unavailable status, e.g. an item with a triggered hold for another patron or an item that is already checked out to another patron. Loan rules can access check-out location open/closed schedule in calculating due date. Loan rules also specify whether a specific criteria may be overridden by staff with specific privileges or roles. (Also see REQ-5190 re requesting rules.)",
+            "feature_type": "Systems: Business Rules"
+        },
+        {
+            "feature_title": "data validation",
+            "feature_description": "Ability to specify default value, data validation, automatic formatting, and required status for any field.",
+            "feature_type": "Systems: Business Rules"
+        },
+        {
+            "feature_title": "system backup",
+            "feature_description": "System provides capability to perform live incremental and full backups of data and transaction logs. System supports use of third-party backup software such as EMC NetWorker.",
+            "feature_type": "Systems: Data Recovery"
+        },
+        {
+            "feature_title": "data rollback",
+            "feature_description": "System logs data changes (such as record deletions) and provides \"undo\" functionality. Ideally, system provides revision control.",
+            "feature_type": "Systems: Data Recovery"
+        },
+        {
+            "feature_title": "server clustering",
+            "feature_description": "Ability to cluster servers for failover capability.",
+            "feature_type": "Systems: Data Recovery"
+        },
+        {
+            "feature_title": "patron data security",
+            "feature_description": "Patron data is secure in all transfers to and from the system.",
+            "feature_type": "Systems: Security"
+        },
+        {
+            "feature_title": "user account privileges",
+            "feature_description": "System administrative staff has full visibility and control of user privileges.",
+            "feature_type": "Systems: Security"
+        },
+        {
+            "feature_title": "secure protocol support",
+            "feature_description": "System supports secure protocols, including SFTP, SSL, and SSH. SFTP is supported in both active and passive modes, configurable per vendor.",
+            "feature_type": "Systems: Security"
+        },
+        {
+            "feature_title": "MARC import/export",
+            "feature_description": "MARC bibliographic and authority records can be imported and exported, singly and in batch, all fields or selected fields, to and from vendors including OCLC. Imported records can overlay existing short or full bibliographic records. Imported batches can be maintained and manipulated as selection lists (see REQ-3004).",
+            "feature_type": "Systems: Maintenance"
+        },
+        {
+            "feature_title": "record sets",
+            "feature_description": "System supports an unlimited number of record sets, with the ability to import and export set members in batch. Record sets can be the basis for batch field updates; can be used as a limiting scope for queries; can be used to delete original records with the ability to review prior to deletion, write errors to a log file, and undo one or more deletions.",
+            "feature_type": "Systems: Maintenance"
+        },
+        {
+            "feature_title": "staff account setup",
+            "feature_description": "System provides a dedicated interface for creating new staff accounts. New staff account creation process provides configurable templates for account administrator use; provides granular privileges for account creation, modification, and deletion.",
+            "feature_type": "Systems: Maintenance"
+        },
+        {
+            "feature_title": "patron account setup",
+            "feature_description": "System provides a dedicated interface for creating new patron accounts. Patron account creation process provides configurable templates for staff use; supports field validation and required fields; provides configurable defaults.",
+            "feature_type": "Systems: Maintenance"
+        },
+        {
+            "feature_title": "job scheduling",
+            "feature_description": "System supports scheduling of maintenance tasks, reports, and data exports. Jobs can be scheduled in sequence (\"start job B when job A finishes\") and can be modified or cancelled at any time prior to starting.",
+            "feature_type": "Systems: Maintenance"
+        },
+        {
+            "feature_title": "job scheduling: management",
+            "feature_description": "Staff can be given permission to schedule tasks, reports, and data exports. System administration staff can view and manage jobs scheduled by other staff.",
+            "feature_type": "Systems: Maintenance"
+        },
+        {
+            "feature_title": "keyboard macros and shortcuts",
+            "feature_description": "System supports administrator-programmable and user-programmable macros and/or keyboard shortcuts. Shortcut keys may be assigned to macros (e.g. 'Insert Field') or to text strings. Macros are centrally managed on server, can be imported from and exported to individual users, and can be restricted for use and/or editting through centrally-managed permissions.",
+            "feature_type": "Systems: Maintenance"
+        },
+        {
+            "feature_title": "accounts independent from workstation",
+            "feature_description": "Staff and group accounts are independent from workstations; client install should not be tied to a specific location.",
+            "feature_type": "Systems: Client Management"
+        },
+        {
+            "feature_title": "client software updates",
+            "feature_description": "Client software installation and updates must be centrally managed, using standard or proprietary network management tools, allowing streaming updates from server. Ability to specify specific clients to be updated. Client software can be managed with VNC and Remote Desktop.",
+            "feature_type": "Systems: Client Management"
+        },
+        {
+            "feature_title": "client configurations",
+            "feature_description": "All client configuration files are server based; configurations can be exported and imported between clients.",
+            "feature_type": "Systems: Client Management"
+        },
+        {
+            "feature_title": "report format and output",
+            "feature_description": "Ability to fully customize layout and appearance of reports. Ability to display, print, email, or save report to standard formats including CSV and Excel, as well as to customizable formats.",
+            "feature_type": "Systems: Queries & Reports"
+        },
+        {
+            "feature_title": "query tool",
+            "feature_description": "System provides a user-friendly interface for designing queries against all record types. Staff can select fields to query; select values from picklist of possible values; select regular expressions from drop-down menu, and use a full range of Boolean operators. Administrators control staff access to tables and fields.",
+            "feature_type": "Systems: Queries & Reports"
+        },
+        {
+            "feature_title": "report templates",
+            "feature_description": "System administrators can create report templates that are available to front-line staff, and can be run as is or modified to the staff person's particular needs.",
+            "feature_type": "Systems: Queries & Reports"
+        },
+        {
+            "feature_title": "reports permissions",
+            "feature_description": "System provides fine-grained permissions to allow or disallow staff to run specific reports, and/or to run ad hoc reports on specific sets of data.",
+            "feature_type": "Systems: Queries & Reports"
+        },
+        {
+            "feature_title": "record number report",
+            "feature_description": "System reports for each record type: current record number, current number of records, number deleted, and number purged. Record types include patron, bibliographic, item, order, invoice, etc. Access to record numbers is controlled at the user/group level.",
+            "feature_type": "Systems: Queries & Reports"
+        },
+        {
+            "feature_title": "printer support",
+            "feature_description": "Ability to define and select four types of printers: receipt printer, standard printer, label printer, and forms printer. All Windows printers are supported.",
+            "feature_type": "Systems: Queries & Reports"
+        },
+        {
+            "feature_title": "multiple print output options",
+            "feature_description": "Ability to print to a file on the server, ftp, email, or printer from any part of the application. When applicable, the ability to select record fields and control order of fields when printing.",
+            "feature_type": "Systems: Queries & Reports"
+        }
+    ],
+    "data_dictionary": [
+        {
+            "variable_name": "ILS",
+            "variable_description": "Integrated Library System"
+        },
+        {
+            "variable_name": "SRS",
+            "variable_description": "Software Requirements Specification"
+        },
+        {
+            "variable_name": "Patron",
+            "variable_description": "A customer of King County Library System, either possessing a library card or not, either on site of a community library or not, using either print materials, media materials, or electronic resources."
+        },
+        {
+            "variable_name": "Staff",
+            "variable_description": "Managers, librarians, library technicians, library assistants, and library pages who are involved in designing and providing services for the Library."
+        },
+        {
+            "variable_name": "System Administrators",
+            "variable_description": "Staff with responsibility for managing servers, databases, applications, services, ports, and APIs related to the ILS."
+        },
+        {
+            "variable_name": "Managers",
+            "variable_description": "Management staff who oversee Library processes."
+        },
+        {
+            "variable_name": "Library Managers",
+            "variable_description": "Cluster and Site Managers who provide input to the design and implementation of Library services."
+        },
+        {
+            "variable_name": "Library Directors",
+            "variable_description": "Members of the Library Executive Team who plan and direct Library services and priorities."
+        },
+        {
+            "variable_name": "OPAC",
+            "variable_description": "Online Public Access Catalog"
+        },
+        {
+            "variable_name": "USMARC21",
+            "variable_description": "Standard-format data file"
+        },
+        {
+            "variable_name": "EDIFACT",
+            "variable_description": "Standard-format data file"
+        },
+        {
+            "variable_name": "SQL",
+            "variable_description": "Structured Query Language"
+        },
+        {
+            "variable_name": "ODBC",
+            "variable_description": "Open Database Connectivity"
+        },
+        {
+            "variable_name": "SIP2",
+            "variable_description": "Standard Interchange Protocol 2"
+        },
+        {
+            "variable_name": "NCIP2",
+            "variable_description": "NISO Circulation Interchange Protocol 2"
+        },
+        {
+            "variable_name": "APIs",
+            "variable_description": "Application Programming Interfaces"
+        },
+        {
+            "variable_name": "HTML",
+            "variable_description": "HyperText Markup Language"
+        },
+        {
+            "variable_name": "SNMP",
+            "variable_description": "Simple Network Management Protocol"
+        },
+        {
+            "variable_name": "CPU",
+            "variable_description": "Central Processing Unit"
+        },
+        {
+            "variable_name": "IP address",
+            "variable_description": "Internet Protocol address"
+        },
+        {
+            "variable_name": "SMTP",
+            "variable_description": "Simple Mail Transfer Protocol"
+        },
+        {
+            "variable_name": "SFTP",
+            "variable_description": "SSH File Transfer Protocol"
+        },
+        {
+            "variable_name": "SSL",
+            "variable_description": "Secure Sockets Layer"
+        },
+        {
+            "variable_name": "SSH",
+            "variable_description": "Secure Shell"
+        },
+        {
+            "variable_name": "MARC",
+            "variable_description": "Machine-Readable Cataloging"
+        },
+        {
+            "variable_name": "OCLC",
+            "variable_description": "Online Computer Library Center"
+        },
+        {
+            "variable_name": "VNC",
+            "variable_description": "Virtual Network Computing"
+        },
+        {
+            "variable_name": "CSV",
+            "variable_description": "Comma Separated Values"
+        },
+        {
+            "variable_name": "Excel",
+            "variable_description": "Standard report format"
+        }
+    ],
+    "compliance_terms": [
+        {
+            "compliance_title": "Standards-compliant HTML",
+            "compliance_description": "System Administration Module shall produce standards-compliant HTML."
+        },
+        {
+            "compliance_title": "Relational Database Back-End",
+            "compliance_description": "System Administration Module shall use a fully relational database back-end."
+        },
+        {
+            "compliance_title": "Operating System Environment",
+            "compliance_description": "System Administration shall operate on a Linux or Solaris server."
+        },
+        {
+            "compliance_title": "Web Browser Compatibility",
+            "compliance_description": "If web-browser based, System Administration shall be accessible through Microsoft Internet Explorer (v.6.0 and later) and Mozilla Firefox (v.2.0 and later)."
+        },
+        {
+            "compliance_title": "Assistive Technology Accessibility",
+            "compliance_description": "System Administration shall be accessible with screen-reading software, screen-magnification software, and other software programs designed to increase accessibility."
+        },
+        {
+            "compliance_title": "User Access Control",
+            "compliance_description": "User rights and privileges will be controlled through security groups and/or \"roles\" that allow access control for individuals, workgroups, and arbitrary staff groups."
+        }
+    ],
+    "reference_file": "feature_dataset/2009 - library.pdf"
+}
