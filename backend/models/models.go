@@ -1,0 +1,41 @@
+package models
+
+type Compliance struct {
+	ComplianceID          int    `bson:"compliance_id" json:"compliance_id"`
+	ComplianceTitle       string `bson:"compliance_title" json:"compliance_title"`
+	ComplianceDescription string `bson:"compliance_description" json:"compliance_description"`
+	ProjectName           string `bson:"project_name" json:"project_name"`
+	ReferenceFile         string `bson:"reference_file" json:"reference_file"`
+	ProjectID             int    `bson:"project_id" json:"project_id"`
+}
+
+type DataDictionary struct {
+	DictionaryID       int    `bson:"dictionary_id" json:"dictionary_id"`
+	VariableName       string `bson:"variable_name" json:"variable_name"`
+	VariableDescription string `bson:"variable_description" json:"variable_description"`
+	ProjectName        string `bson:"project_name" json:"project_name"`
+	ReferenceFile      string `bson:"reference_file" json:"reference_file"`
+	ProjectID          int    `bson:"project_id" json:"project_id"`
+}
+
+type Feature struct {
+	FeatureID          int      `bson:"feature_id" json:"feature_id"`
+	FeatureTitle       string   `bson:"feature_title" json:"feature_title"`
+	FeatureDescription string   `bson:"feature_description" json:"feature_description"`
+	FeatureType        string   `bson:"feature_type" json:"feature_type"`
+	ProjectName        string   `bson:"project_name" json:"project_name"`
+	ReferenceFile      string   `bson:"reference_file" json:"reference_file"`
+	ProjectID          int      `bson:"project_id" json:"project_id"`
+}
+
+type Provision struct {
+	ProvisionID   int      `bson:"provision_id" json:"provision_id"`
+	ProvisionTitle string   `bson:"provision_title" json:"provision_title"`
+	ProvisionBody  string   `bson:"provision_body" json:"provision_body"`
+	ProvisionCode  string   `bson:"provision_code" json:"provision_code"`
+	Country        string   `bson:"country" json:"country"`
+	Region         string   `bson:"region" json:"region"`
+	RelevantLabels []string `bson:"relevant_labels" json:"relevant_labels"`
+	LawCode        string   `bson:"law_code" json:"law_code"`
+	ReferenceFile  string   `bson:"reference_file" json:"reference_file"`
+}
