@@ -14,7 +14,7 @@ FEATURE_SCHEMA = {
   "title": "Answer",
   "type": "object",
   "properties": {
-    "provisions": {
+    "features": {
       "type": "array",
       "description": "List of all features violated by the law",
       "items": {
@@ -28,9 +28,25 @@ FEATURE_SCHEMA = {
             "type": "string",
             "description": "feature_description of feature violated by law."
           },
+          "feature_id": {
+            "type": "string",
+            "description": "feature_id of feature violated by law."
+          },
           "feature_type": {
             "type": "string",
             "description": "feature_type of feature violated by law."
+          },
+          "project_name": {
+            "type": "string",
+            "description": "project_name of feature violated by law."
+          },
+          "project_id": {
+              "type": "string",
+              "description": "project_id of feature violated by law."
+          },
+          "reference_file": {
+            "type": "string",
+            "description": "reference_file of feature violated by law."
           },
           "reasoning": {
             "type": "string",
@@ -40,21 +56,24 @@ FEATURE_SCHEMA = {
         "required": [
           "feature_title",
           "feature_description",
+          "feature_id",
           "feature_type",
+          "project_name",
+          "project_id",
+          "reference_file",
           "reasoning"
         ]
       }
     }
   },
   "required": [
-    "provisions"
+    "features"
   ]
 }
 
 
 class FeatureRagModel:
-    def __init__(self, args):
-        self.args = args
+    def __init__(self):
         self.vector_store_path = None
         self.prompt_template = None
         self.embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")

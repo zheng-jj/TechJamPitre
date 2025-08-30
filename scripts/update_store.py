@@ -1,3 +1,4 @@
+from collections import defaultdict
 import os
 import json
 import glob
@@ -12,13 +13,15 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.chains.combine_documents import create_stuff_documents_chain
 
-
-
 VECTOR_LAW_STORE_PATH = "law_vector_store"
-VECTOR_FEATURE_STORE_PATH = "feature_vector_store"
 LAW_DATABASE_FILE = "law_data/laws.jsonl" # main law database
-FEATURE_DATABASE_FILE = "feature_data/" # main feature database
 NEW_LAW_FILE = "new_law.json" # new law file
+
+VECTOR_FEATURE_STORE_PATH = "feature_vector_store"
+FEATURE_DATABASE_FILE = "feature_data/" # main feature database
+NEW_FEATURE_FILE = "new_feature.json" # new feature file
+NEW_COMPLIANCE_FILE = "new_compliance.json" # new compliance file
+NEW_DATA_DICTIONARY_FILE = "new_data_dictionary.json" # new data dictionary file
 
 LAW_SCHEMA = {
   "title": "Answer",
@@ -87,32 +90,16 @@ LAW_SCHEMA = {
 }
 
 class update_store:
-    # def process_feature_record(project_name, feature, source_file):
-    #     content = (
-    #         f"Project: {project_name}\n"
-    #         f"Feature Title: {feature.get('feature_title', 'N/A')}\n"
-    #         f"Feature Type: {feature.get('feature_type', 'N/A')}\n"
-    #         f"Description: {feature.get('feature_description', '')}"
-    #     )
-    #     metadata = {
-    #         "project_name": project_name,
-    #         "source_file": source_file,
-    #         "doc_type": "Feature",
-    #         "feature_title": feature.get('feature_title')
-    #     }
-    #     return Document(page_content=content, metadata=metadata)
-        
-
     def __init__(self, args):
         load_dotenv()
         self.embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
         if (args == "update_law"):
             self.update_law()
-        elif (args == "update_feature"):
-            self.update_feature()
+        elif (args == "add_feature"):
+            self.add_feature()
         else:
-            print("Invalid argument. Please use 'update_law' or 'update_feature'.")
+            print("Invalid argument. Please use 'update_law' or 'add_feature'.")
 
     def update_law(self):
         self.vector_store = FAISS.load_local(VECTOR_LAW_STORE_PATH, self.embeddings, allow_dangerous_deserialization=True)
@@ -120,7 +107,7 @@ class update_store:
         
         self.llm.response_schema = LAW_SCHEMA
         self.prompt_template = """
-        Flag out 1 MOST SIMILAR LAW with SIMILAR LAW CODE, LAW TITLE, AND ONLY SLIGHT CHANGES TO ITS DESCRIPTION. RESPONED WITH {{NONE}} IF THERE ARE NO IDENTICAL LAW CODE, ELSE OUTPUT OLD LAW AND NEW LAW.
+        Flag out 1 MOST SIMILAR LAW with SIMILAR LAW CODE, LAW TITLE, with either NO or ONLY SLIGHT CHANGES TO ITS DESCRIPTION. RESPONED WITH {{NONE}} IF THERE ARE NO IDENTICAL LAW CODE, ELSE OUTPUT OLD LAW AND NEW LAW.
     
         You MUST ONLY respond with a JSON object that conforms to the 'Answer' schema.
         Your response should start with a '{{' and end with a '}}'. Do not include any other text, explanations, or markdown formatting.
@@ -147,7 +134,7 @@ class update_store:
             self.embeddings, 
             allow_dangerous_deserialization=True
         )
-        retriever = vector_store.as_retriever(search_type="similarity_score_threshold", search_kwargs={"score_threshold": 0.8, 'fetch_k': len(self.vector_store.docstore._dict), 'k': len(self.vector_store.docstore._dict)})
+        retriever = vector_store.as_retriever(search_type="similarity_score_threshold", search_kwargs={"score_threshold": 0.9, 'fetch_k': len(self.vector_store.docstore._dict), 'k': len(self.vector_store.docstore._dict)})
 
         prompt = ChatPromptTemplate.from_template(self.prompt_template)
 
@@ -162,7 +149,8 @@ class update_store:
         document_chain = create_stuff_documents_chain(self.llm, prompt)
         # self.analysis_result = self.rag_chain.invoke(self.query) # invoke query text
         self.analysis_result = document_chain.invoke({"query": self.query, "context": retriever.invoke(self.query)})
-        print(json.dumps(self.analysis_result, indent=2))
+        print(json.loads(self.analysis_result))
+        # print(self.analysis_result)
         self.replace_law() # replace law
 
         # check if law already exists
@@ -170,60 +158,66 @@ class update_store:
         
 
     def replace_law(self):
-        id = self.analysis_result.get('id')
+        id = json.loads(self.analysis_result).get('id')
         if id:
             # Find the existing law in the vector store
             existing_doc = self.vector_store.docstore.get(id)
             if existing_doc:
                 for doc_id, doc in self.vector_store.docstore.items():
                     if doc.metadata.get('id') == id:
-                        self.vector_store.docstore[doc_id] = Document(self.query)
+                        self.vector_store.docstore[doc_id] = Document(self.query, metadata = {"id": self.new_law.get('id')})
                         print(f"Law with id {id} has been updated to law with id {self.new_law.get('id')} in the vector store.")
-
         else:
-            self.vector_store.add_documents([Document(self.query)])
+            self.vector_store.add_documents([Document(self.query, metadata = {"id": self.new_law.get('id')})])
             print(f"New law with id {self.new_law.get('id')} has been added to the vector store.")
 
         self.vector_store.save_local(VECTOR_LAW_STORE_PATH)
         print("Vector store updated successfully.")
 
 
-    # def update_feature(self):
-    #     self.vector_store = FAISS.load_local(VECTOR_FEATURE_STORE_PATH, self.embeddings, allow_dangerous_deserialization=True)
+    def add_features(self):
+        project_name = None
+        files_to_process = [
+            NEW_FEATURE_FILE,
+            NEW_COMPLIANCE_FILE,
+            NEW_DATA_DICTIONARY_FILE
+        ]
+        feature_files = 
 
-    #     json_files = glob.glob(os.path.join(FEATURE_DATABASE_FILE, "*.json"))
-    #     for file_path in json_files:
-    #         with open(file_path, 'r', encoding='utf-8') as f:
-    #             data = json.load(f)
+        if not feature_files:
+            print(f"Error: No feature files (e.g., 'feature-MyProject.jsonl') found in '{features_directory}'.")
+            return []
         
-    #     # check if law already exists
-    #     existing_law_index = next((i for i, law in enumerate(all_laws) if json.loads(law).get('law_code') == new_law.get('law_code')), -1)
+        first_feature_file = os.path.basename(feature_files[0])
+        project_name = first_feature_file.replace('feature-', '').replace('.jsonl', '')
 
-    #     if existing_law_index != -1:
-    #         ids_to_remove = [
-    #             doc_id for doc_id, doc in self.vector_store.docstore.items()
-    #             if doc.metadata.get('law_id') == new_law.get('law_code')
-    #         ]
-
-    #         # Remove existing law
-    #         if ids_to_remove:
-    #             self.vector_store.delete(ids_to_remove)
-    #             print(f"Removed {len(ids_to_remove)} documents related to law_code {new_law.get('law_code')} from vector store.")
-
-    #         all_laws[existing_law_index] = json.dumps(new_law)
-    #     else:
-    #         all_laws.append(json.dumps(new_law))
-
-    #     new_doc = self.process_law_item(new_law, NEW_LAW_FILE)
-    #     self.vector_store.add_documents([new_doc])
-    #     self.vector_store.save_local(VECTOR_STORE_PATH)
-
-    #     # rewrite jsonl file
-    #     with open(LAW_DATABASE_FILE, 'w') as jsonlfile:
-    #         jsonlfile.writelines(all_laws)
 
     def format_docs(self, docs):
-        return "\n\n".join(
-            f"Source: {doc.metadata.get('source_file', 'N/A')}\nID: {doc.metadata.get('law_code') or doc.metadata.get('feature_id')}\nContent: {doc.page_content}"
-            for doc in docs
+        print("--- Documents received by format_docs ---")
+        for doc in docs:
+            print(doc.metadata) # Print metadata to identify the doc
+        print("------------------------------------")
+        # ... rest of your formatting logic
+        return "\n\n".join(doc.page_content for doc in docs)
+    
+    def process_feature_doc(self):
+        content = (
+            f"**Project:** {feature.get('project_name', 'N/A')}\n\n"
+            f"**Project ID:** {feature.get('project_id', 'N/A')}\n\n"
+            f"**Feature Title:** {feature.get('feature_title', 'N/A')}\n"
+            f"**Feature Type:** {feature.get('feature_type', 'N/A')}\n"
+            f"**Feature ID:** {feature.get('feature_id', 'N/A')}\n"
+            f"**Feature Description:**\n{feature.get('feature_description', '')}\n\n"
+            f"--- Project Data Dictionary ---\n{dict_context}\n\n"
+            f"--- Project Compliance Rules ---\n{comp_context}\n"
+            f"**Source File:** {feature.get('reference_file', 'N/A')}"
         )
+        
+        metadata = {
+            "project_name": feature.get('project_name'),
+            "project_id": feature.get('project_id'),
+            "feature_id": feature.get('feature_id'),
+            "feature_title": feature.get('feature_title'),
+            "source_file": feature.get('reference_file')
+        }
+        return Document(page_content=content, metadata=metadata)

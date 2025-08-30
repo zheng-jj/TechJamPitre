@@ -16,14 +16,12 @@ FEATURES_DIRECTORY = "feature_data/"
 VECTOR_STORE_PATH = "feature_vector_store"  # Save to a separate directory
 
 def main():
-    """Scans a directory, groups files by project, and creates an enriched vector store."""
-    load_dotenv()
-    
-    print(f"Scanning for feature data in: '{FEATURES_DIRECTORY}'")
-
+    # use dictionary to split projects
     project_files = defaultdict(dict)
+
     for file_path in glob.glob(os.path.join(FEATURES_DIRECTORY, "*.jsonl")):
         base_name = os.path.basename(file_path).split('.')[0]
+        # Get project name part from file name
         project_name_part = base_name.split('-')[1].strip()
         
         if 'feature' in base_name:
@@ -36,10 +34,7 @@ def main():
     print(f"Found data for {len(project_files)} projects.")
 
     all_docs = []
-    for project_name, files in project_files.items():
-        print(f"  - Processing project: {project_name}")
-
-
+    for project_name_part, files in project_files.items():
         project_dictionary = []
         if files.get('dictionary'):
             with open(files['dictionary'], 'r', encoding='utf-8') as f:
