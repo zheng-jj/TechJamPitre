@@ -31,17 +31,32 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Search, Plus, Edit, Trash2, Filter } from "lucide-react";
+import {
+  ArrowLeft,
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  Filter,
+  FileText,
+  Folder,
+} from "lucide-react";
 import { toast } from "sonner";
 
+// Updated interface to match your API response
 interface Feature {
-  id: string;
-  featureName: string;
-  featureType: string;
-  featureDescription: string;
-  relevantLabels: string[];
-  source: string;
-  createdAt: string;
+  feature_id: string;
+  feature_title: string;
+  feature_description: string;
+  feature_type: string;
+  project_name: string;
+  reference_file: string;
+  project_id: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  response: Feature[];
 }
 
 export default function Features() {
@@ -50,58 +65,34 @@ export default function Features() {
   const [filteredFeatures, setFilteredFeatures] = useState<Feature[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [filterSource, setFilterSource] = useState("all");
+  const [filterProject, setFilterProject] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [editingFeature, setEditingFeature] = useState<Feature | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const mockFeatures: Feature[] = [
-      {
-        id: "1",
-        featureName: "Auto-tracking",
-        featureType: "Analytics",
-        featureDescription:
-          "Automatic user behavior tracking without explicit consent",
-        relevantLabels: ["tracking", "analytics", "privacy"],
-        source: "product-spec",
-        createdAt: "2024-01-15",
-      },
-      {
-        id: "2",
-        featureName: "Data Export",
-        featureType: "Data Management",
-        featureDescription: "Bulk data export functionality for user data",
-        relevantLabels: ["data", "export", "privacy"],
-        source: "api-docs",
-        createdAt: "2024-01-20",
-      },
-      {
-        id: "3",
-        featureName: "Geolocation Services",
-        featureType: "Location",
-        featureDescription: "Real-time location tracking and storage",
-        relevantLabels: ["location", "tracking", "gps"],
-        source: "mobile-app",
-        createdAt: "2024-02-01",
-      },
-      {
-        id: "4",
-        featureName: "Cookie Management",
-        featureType: "Web",
-        featureDescription: "Third-party cookie integration and management",
-        relevantLabels: ["cookies", "web", "tracking"],
-        source: "web-platform",
-        createdAt: "2024-02-10",
-      },
-    ];
+  const getFeatures = async () => {
+    try {
+      const response = await fetch("/api/feature", {
+        method: "POST",
+      });
+      const result: ApiResponse = await response.json();
 
-    setTimeout(() => {
-      setFeatures(mockFeatures);
-      setFilteredFeatures(mockFeatures);
+      if (response.ok && result.success) {
+        setFeatures(result.response); // Access the response array
+        setIsLoading(false);
+      } else {
+        toast.error("Failed to load features. Please try again.");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Error fetching features:", error);
+      toast.error("Failed to load features. Please try again.");
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    getFeatures();
   }, []);
 
   // Filter and search logic
@@ -111,30 +102,30 @@ export default function Features() {
     if (searchTerm) {
       filtered = filtered.filter(
         (feature) =>
-          feature.featureName
+          feature.feature_title
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          feature.featureDescription
+          feature.feature_description
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          feature.relevantLabels.some((label) =>
-            label.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+          feature.project_name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (filterType !== "all") {
       filtered = filtered.filter(
-        (feature) => feature.featureType === filterType
+        (feature) => feature.feature_type === filterType
       );
     }
 
-    if (filterSource !== "all") {
-      filtered = filtered.filter((feature) => feature.source === filterSource);
+    if (filterProject !== "all") {
+      filtered = filtered.filter(
+        (feature) => feature.project_name === filterProject
+      );
     }
 
     setFilteredFeatures(filtered);
-  }, [features, searchTerm, filterType, filterSource]);
+  }, [features, searchTerm, filterType, filterProject]);
 
   const handleEdit = (feature: Feature) => {
     setEditingFeature(feature);
@@ -144,7 +135,7 @@ export default function Features() {
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this feature?")) {
       // API call would go here
-      setFeatures(features.filter((f) => f.id !== id));
+      setFeatures(features.filter((f) => f.feature_id !== id));
       toast.success("Feature deleted successfully");
     }
   };
@@ -155,7 +146,9 @@ export default function Features() {
     try {
       // API call would go here
       setFeatures(
-        features.map((f) => (f.id === editingFeature.id ? editingFeature : f))
+        features.map((f) =>
+          f.feature_id === editingFeature.feature_id ? editingFeature : f
+        )
       );
       setIsDialogOpen(false);
       setEditingFeature(null);
@@ -165,8 +158,12 @@ export default function Features() {
     }
   };
 
-  const uniqueTypes = [...new Set(features.map((f) => f.featureType))];
-  const uniqueSources = [...new Set(features.map((f) => f.source))];
+  // Get unique values for filters
+  // Get unique values for filters
+  const uniqueTypes = Array.from(new Set(features.map((f) => f.feature_type)));
+  const uniqueProjects = Array.from(
+    new Set(features.map((f) => f.project_name))
+  );
 
   if (isLoading) {
     return (
@@ -200,7 +197,8 @@ export default function Features() {
                 Features
               </h1>
               <p className="text-xl text-gray-600">
-                Manage your feature documentation
+                Manage your feature documentation ({features.length} features
+                found)
               </p>
             </div>
           </div>
@@ -210,7 +208,7 @@ export default function Features() {
             <div className="relative md:col-span-2">
               <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
               <Input
-                placeholder="Search features..."
+                placeholder="Search features, descriptions, or projects..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -229,15 +227,15 @@ export default function Features() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={filterSource} onValueChange={setFilterSource}>
+            <Select value={filterProject} onValueChange={setFilterProject}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by source" />
+                <SelectValue placeholder="Filter by project" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Sources</SelectItem>
-                {uniqueSources.map((source) => (
-                  <SelectItem key={source} value={source}>
-                    {source}
+                <SelectItem value="all">All Projects</SelectItem>
+                {uniqueProjects.map((project) => (
+                  <SelectItem key={project} value={project}>
+                    {project}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -254,23 +252,28 @@ export default function Features() {
         >
           {filteredFeatures.map((feature, index) => (
             <motion.div
-              key={feature.id}
+              key={feature.feature_id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <Card className="h-full hover:shadow-lg transition-shadow duration-300">
+              <Card className="h-full hover:shadow-lg transition-shadow duration-300 border-l-4 border-l-blue-500">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg mb-1">
-                        {feature.featureName}
-                      </CardTitle>
-                      <Badge variant="secondary" className="mb-2">
-                        {feature.featureType}
+                      <div className="flex items-center gap-2 mb-2">
+                        <CardTitle className="text-lg">
+                          {feature.feature_title}
+                        </CardTitle>
+                        <Badge variant="secondary" className="text-xs">
+                          ID: {feature.feature_id}
+                        </Badge>
+                      </div>
+                      <Badge variant="outline" className="mb-2">
+                        {feature.feature_type}
                       </Badge>
-                      <CardDescription className="text-sm">
-                        {feature.featureDescription}
+                      <CardDescription className="text-sm line-clamp-3">
+                        {feature.feature_description}
                       </CardDescription>
                     </div>
                     <div className="flex gap-2 ml-4">
@@ -284,7 +287,7 @@ export default function Features() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(feature.id)}
+                        onClick={() => handleDelete(feature.feature_id)}
                         className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -294,25 +297,21 @@ export default function Features() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <div>
-                      <p className="text-xs font-medium text-gray-700 mb-1">
-                        Labels:
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {feature.relevantLabels.map((label, labelIndex) => (
-                          <Badge
-                            key={labelIndex}
-                            variant="outline"
-                            className="text-xs"
-                          >
-                            {label}
-                          </Badge>
-                        ))}
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Folder className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">
+                        {feature.project_name}
+                      </span>
+                      <Badge variant="secondary" className="text-xs">
+                        Project ID: {feature.project_id}
+                      </Badge>
                     </div>
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>Source: {feature.source}</span>
-                      <span>{feature.createdAt}</span>
+
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-gray-500" />
+                      <span className="text-xs text-gray-600 truncate">
+                        {feature.reference_file}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -321,14 +320,16 @@ export default function Features() {
           ))}
         </motion.div>
 
-        {filteredFeatures.length === 0 && (
+        {filteredFeatures.length === 0 && !isLoading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
             <p className="text-gray-500 text-lg">
-              No features found matching your criteria.
+              {features.length === 0
+                ? "No features found. Try uploading some documents first."
+                : "No features found matching your criteria."}
             </p>
           </motion.div>
         )}
@@ -345,14 +346,14 @@ export default function Features() {
             {editingFeature && (
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="name">Feature Name</Label>
+                  <Label htmlFor="name">Feature Title</Label>
                   <Input
                     id="name"
-                    value={editingFeature.featureName}
+                    value={editingFeature.feature_title}
                     onChange={(e) =>
                       setEditingFeature({
                         ...editingFeature,
-                        featureName: e.target.value,
+                        feature_title: e.target.value,
                       })
                     }
                   />
@@ -361,11 +362,11 @@ export default function Features() {
                   <Label htmlFor="type">Feature Type</Label>
                   <Input
                     id="type"
-                    value={editingFeature.featureType}
+                    value={editingFeature.feature_type}
                     onChange={(e) =>
                       setEditingFeature({
                         ...editingFeature,
-                        featureType: e.target.value,
+                        feature_type: e.target.value,
                       })
                     }
                   />
@@ -374,41 +375,37 @@ export default function Features() {
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
-                    value={editingFeature.featureDescription}
+                    value={editingFeature.feature_description}
                     onChange={(e) =>
                       setEditingFeature({
                         ...editingFeature,
-                        featureDescription: e.target.value,
+                        feature_description: e.target.value,
                       })
                     }
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="labels">
-                    Relevant Labels (comma-separated)
-                  </Label>
+                  <Label htmlFor="project">Project Name</Label>
                   <Input
-                    id="labels"
-                    value={editingFeature.relevantLabels.join(", ")}
+                    id="project"
+                    value={editingFeature.project_name}
                     onChange={(e) =>
                       setEditingFeature({
                         ...editingFeature,
-                        relevantLabels: e.target.value
-                          .split(", ")
-                          .map((s) => s.trim()),
+                        project_name: e.target.value,
                       })
                     }
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="source">Source</Label>
+                  <Label htmlFor="reference">Reference File</Label>
                   <Input
-                    id="source"
-                    value={editingFeature.source}
+                    id="reference"
+                    value={editingFeature.reference_file}
                     onChange={(e) =>
                       setEditingFeature({
                         ...editingFeature,
-                        source: e.target.value,
+                        reference_file: e.target.value,
                       })
                     }
                   />
