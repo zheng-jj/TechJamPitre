@@ -10,7 +10,7 @@ from langchain.chat_models import init_chat_model
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
-
+from langchain.chains.combine_documents import create_stuff_documents_chain
 
 
 
@@ -120,7 +120,7 @@ class update_store:
         
         self.llm.response_schema = LAW_SCHEMA
         self.prompt_template = """
-        Flag out 1 MOST IDENTICAL LAW with IDENTICAL LAW CODE, LAW TITLE, AND ONLY SLIGHT CHANGES TO ITS DESCRIPTION. RESPONED WITH {{NONE}} IF THERE ARE NO IDENTICAL LAW CODE, ELSE SEPARATE IT OUT WITH OLD LAW AND NEW LAW.
+        Flag out 1 MOST SIMILAR LAW with SIMILAR LAW CODE, LAW TITLE, AND ONLY SLIGHT CHANGES TO ITS DESCRIPTION. RESPONED WITH {{NONE}} IF THERE ARE NO IDENTICAL LAW CODE, ELSE OUTPUT OLD LAW AND NEW LAW.
     
         You MUST ONLY respond with a JSON object that conforms to the 'Answer' schema.
         Your response should start with a '{{' and end with a '}}'. Do not include any other text, explanations, or markdown formatting.
@@ -147,7 +147,7 @@ class update_store:
             self.embeddings, 
             allow_dangerous_deserialization=True
         )
-        retriever = vector_store.as_retriever(search_kwargs={"score_threshold": 0.9})
+        retriever = vector_store.as_retriever(search_type="similarity_score_threshold", search_kwargs={"score_threshold": 0.8, 'fetch_k': len(self.vector_store.docstore._dict), 'k': len(self.vector_store.docstore._dict)})
 
         prompt = ChatPromptTemplate.from_template(self.prompt_template)
 
@@ -159,7 +159,9 @@ class update_store:
         )
         print("RagModel initialized successfully.")
         self.query = json.dumps(self.new_law)
-        self.analysis_result = self.rag_chain.invoke(self.query) # invoke query text
+        document_chain = create_stuff_documents_chain(self.llm, prompt)
+        # self.analysis_result = self.rag_chain.invoke(self.query) # invoke query text
+        self.analysis_result = document_chain.invoke({"query": self.query, "context": retriever.invoke(self.query)})
         print(json.dumps(self.analysis_result, indent=2))
         self.replace_law() # replace law
 
