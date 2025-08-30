@@ -64,13 +64,22 @@ async def upload_law(file: UploadFile = File(...)):
 
         laws = load_jsonl(parsed_law)
 
-        # Save laws to backend
-        try:
-            resp = requests.post(f"{GO_BACKEND_URL}/provision", json=laws)
-            if resp.status_code != 201:
-                print("Failed to save laws:", resp.text)
-        except Exception as e:
-            print("Error sending laws to backend:", e)
+        # Save all laws one by one to MongoDB
+        for provision in laws:
+            # Fix "relevant_labels": convert string -> list of strings
+            if isinstance(provision.get("relevant_labels"), str):
+                provision["relevant_labels"] = [
+                    label.strip() for label in provision["relevant_labels"].split(",")
+                ]
+            
+            try:
+                resp = requests.post(f"{GO_BACKEND_URL}/provision", json=provision)
+                if resp.status_code != 201:
+                    print(f"Failed to save provision {provision.get('provision_code')}: {resp.text}")
+            except Exception as e:
+                print("Error sending laws to backend:", e)
+
+     
 
         # Build prompts + retrieve docs
         law_prompt = ""
@@ -129,13 +138,14 @@ async def upload_feature(file: UploadFile = File(...)):
         compliance = load_jsonl(parsed_compliance)
         data_dict = load_jsonl(parsed_data_dict)
 
-        # Save to backend
-        try:
-            resp = requests.post(f"{GO_BACKEND_URL}/feature", json=features)
-            if resp.status_code != 201:
-                print("Failed to save features:", resp.text)
-        except Exception as e:
-            print("Error sending features to backend:", e)
+       # Save all features one by one to MongoDB
+        for feature in features:
+            try:
+                resp = requests.post(f"{GO_BACKEND_URL}/feature", json=feature)
+                if resp.status_code != 201:
+                    print(f"Failed to save feature {feature.get('feature_title')}: {resp.text}")
+            except Exception as e:
+                print("Error sending features to backend:", e)
 
         # Build prompts
         terminology_prompt = build_prompt(data_dict, "variable_name", "variable_description")
