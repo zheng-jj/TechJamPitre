@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Legal Compliance Checker",
+  title: "CoBridge",
   description:
     "Check if your features comply with international laws and regulations",
 };

@@ -81,7 +81,7 @@ export default function Home() {
           className="text-center mb-12"
         >
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Legal Compliance Checker
+            CoBridge: Legal Compliance Checker
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Upload feature documentation or legal documents to check for
