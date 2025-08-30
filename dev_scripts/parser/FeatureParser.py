@@ -157,7 +157,12 @@ class FeatureParser:
             client = genai.Client()
             
             FeatureParser.logger.info(f"Uploading document: {doc_path}")
-            doc = client.files.upload(file=doc_path)
+
+            if doc_path.lower().endswith(".pdf"):
+                doc = client.files.upload(file=doc_path)
+            else:
+                with open(doc_path, "r") as f:
+                    doc = f.read()
 
             response = client.models.generate_content(
                 model="gemini-2.5-flash",

@@ -8,6 +8,7 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from time import sleep
 
 load_dotenv()
 
@@ -127,14 +128,18 @@ class FeatureRagModel:
         """
         return ChatPromptTemplate.from_template(template)
 
-    def update_vector_store(self, documents: List):
-        try:
-            self.vector_store.add_documents(documents)
-            self.vector_store.save_local(FEATURE_VECTOR_STORE_PATH)
-            self.logger.info(f"Vector store updated with {len(documents)} documents.")
-        except Exception as e:
-            self.logger.error(f"Error updating vector store: {e}", exc_info=True)
-            raise
+    def update_vector_store(self, documents: List, batch_size: int = 2):
+      try:
+          for i in range(0, len(documents), batch_size):
+              batch = documents[i:i + batch_size]
+              self.vector_store.add_documents(batch)
+              sleep(2)
+          self.vector_store.save_local(FEATURE_VECTOR_STORE_PATH)
+          self.logger.info(f"Vector store updated with {len(documents)} documents in batches of {batch_size}.")
+      except Exception as e:
+          self.logger.error(f"Error updating vector store: {e}", exc_info=True)
+          raise
+
 
     def retrieve_docs(self, law) -> List:
         try:
