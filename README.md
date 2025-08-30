@@ -209,7 +209,7 @@ Regulatory Technology Gap: Recognized the significant opportunity in applying mo
 ```bash
 # Clone the repository
 git clone [repository-url]
-cd compliance-automation-frontend
+cd frontend/techjampitre
 
 # Install dependencies
 npm install
