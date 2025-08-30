@@ -2,6 +2,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 import os
 import json
+import requests
 from dotenv import load_dotenv
 
 from parser.LawParser import LawParser
@@ -13,13 +14,13 @@ load_dotenv(dotenv_path=".ENV")
 
 app = FastAPI()
 
+GO_BACKEND_URL = os.getenv("GO_BACKEND_URL") 
+
 rag_law_model = RAGLawModel()
 
 @app.get("/")
 def root():
     print("hello")
-    print(os.getenv("GEMINI_API_KEY"))
-    print(os.getenv("GOOGLE_API_KEY"))
     return {"message": "Welcome to the python services!"}
 
 @app.post("/upload/law")
