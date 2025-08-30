@@ -18,7 +18,7 @@ SCHEMA = {
     "properties": {
         "provisions": {
             "type": "array",
-            "description": "List of all provisions the feature has violated.",
+            "description": "List of all provisions the features has violated. Multiple features can violate the same provision, ensure all feature violations are recorded.",
             "items": {
                 "type": "object",
                 "properties": {
@@ -94,8 +94,7 @@ class RAGLawModel:
 
         You MUST ONLY respond with a JSON object that conforms to the 'Answer' schema.
         Your response should start with a '{{' and end with a '}}'. Do not include any other text, explanations, or markdown formatting.
-
-        The context will contain compliances that are conformed or considered, if it resolves any provision violation, ignore the violation.
+        
         If you find relevant provisions in the context, extract them according to the schema.
         If the context is empty or you cannot find any relevant provisions, you MUST return a JSON object with an empty list for the "provisions" key.
 

@@ -31,8 +31,6 @@ def root():
 
 @app.post("/upload/law")
 async def upload_law(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files allowed")
     try:
         #!!!!!!!!! store parsed_law into nosql
         temp_path = os.path.join("./temp", os.path.basename(file.filename))
@@ -59,10 +57,10 @@ async def upload_law(file: UploadFile = File(...)):
         for doc in raw_docs:
             if doc not in docs:
                 docs.append(doc)  # deduplicate with set
-        result = {}
+        result = ""
         if len(docs) > 0:
             result = rag_feature_model.prompt(law_prompt, docs)
-            
+
         return JSONResponse(content={'conflict': result, 'parsed_law': parsed_law})
     finally:
         # os.remove(temp_path)
@@ -76,8 +74,6 @@ async def upload_feature(file: UploadFile = File(...)):
             f"{i}. {item[title_key]} - {item[desc_key]}"
             for i, item in enumerate(items)
         )
-    if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files allowed")
     try:
         temp_path = os.path.join("./temp", os.path.basename(file.filename))
         contents = await file.read()
@@ -116,6 +112,9 @@ async def upload_feature(file: UploadFile = File(...)):
                 docs.append(doc)  # deduplicate with set
 
         # Final model prompt
+        # <compliance_already_conformed>
+        #    {compliance_prompt}
+        # </compliance_already_conformed>
         full_prompt = f"""
             <features>
             {features_prompt}
@@ -123,11 +122,8 @@ async def upload_feature(file: UploadFile = File(...)):
             <terminology>
             {terminology_prompt}
             </terminology>
-            <compliance_already_conformed>
-            {compliance_prompt}
-            </compliance_already_conformed>
         """
-        result = {}
+        result = "{}"
         if len(docs) > 0:
             result = rag_law_model.prompt(full_prompt.strip(), docs)
 
