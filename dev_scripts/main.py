@@ -3,6 +3,8 @@ from fastapi.responses import JSONResponse
 import os
 import json
 import requests
+import threading
+import time
 from dotenv import load_dotenv
 
 from parser.LawParser import LawParser
@@ -17,6 +19,8 @@ load_dotenv(dotenv_path=".ENV")
 app = FastAPI()
 
 GO_BACKEND_URL = os.getenv("GO_BACKEND_URL")
+SLEEP_SECONDS = 2
+BATCH_SIZE = 2
 
 rag_law_model = RAGLawModel()
 rag_feature_model = FeatureRagModel()
@@ -47,11 +51,16 @@ async def upload_law(file: UploadFile = File(...)):
         parsed_law = LawParser.parse(temp_path)
         documents = law_to_document(parsed_law)
 
-        # Update vector store (may fail due to free-tier limits)
-        try:
-            rag_law_model.update_vector_store(documents)
-        except Exception as e:
-            print("Warning: Failed to update vector store:", e)
+        # Run update_vector_store in a daemon thread to avoid blocking
+        def update_vector_store_daemon():
+            try:
+                rag_law_model.update_vector_store(documents)
+            except Exception as e:
+                print("Warning: Failed to update vector store:", e)
+
+        thread = threading.Thread(target=update_vector_store_daemon)
+        thread.daemon = True
+        thread.start()
 
         laws = load_jsonl(parsed_law)
 
@@ -66,11 +75,14 @@ async def upload_law(file: UploadFile = File(...)):
         # Build prompts + retrieve docs
         law_prompt = ""
         raw_docs = []
-        for i, law in enumerate(laws):
-            law_prompt += f'\n{i}. [{law["provision_code"]}/{law["law_code"]}] {law["provision_title"]} - {law["provision_body"]}'
-            doc_query_prompt = f'{law["provision_title"]} - {law["provision_body"]}'
-            raw_docs.extend(rag_feature_model.retrieve_docs(doc_query_prompt))
-
+        for i in range(0, len(laws), BATCH_SIZE):
+            batch = laws[i:i + BATCH_SIZE]
+            for j, law in enumerate(batch, start=i):
+                law_prompt += f'\n{j}. [{law["provision_code"]}/{law["law_code"]}] {law["provision_title"]} - {law["provision_body"]}'
+                doc_query_prompt = f'{law["provision_title"]} - {law["provision_body"]}'
+                raw_docs.extend(rag_feature_model.retrieve_docs(doc_query_prompt))
+            
+            time.sleep(SLEEP_SECONDS)
         docs = []
         for doc in raw_docs:
             if doc not in docs:
@@ -84,7 +96,6 @@ async def upload_law(file: UploadFile = File(...)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.post("/upload/feature")
 async def upload_feature(file: UploadFile = File(...)):
@@ -102,12 +113,17 @@ async def upload_feature(file: UploadFile = File(...)):
         # Parse feature file
         parsed_feature, parsed_compliance, parsed_data_dict = FeatureParser.parse(temp_path)
 
-        # Update vector store
-        try:
-            documents = feature_to_document(parsed_feature, parsed_compliance, parsed_data_dict)
-            rag_feature_model.update_vector_store(documents)
-        except Exception as e:
-            print("Warning: Failed to update feature vector store:", e)
+        # Run update_vector_store in a background daemon thread to avoid blocking
+        def update_vector_store_daemon():
+            try:
+                documents = feature_to_document(parsed_feature, parsed_compliance, parsed_data_dict)
+                rag_feature_model.update_vector_store(documents)
+            except Exception as e:
+                print("Warning: Failed to update feature vector store:", e)
+
+        thread = threading.Thread(target=update_vector_store_daemon)
+        thread.daemon = True
+        thread.start()
 
         features = load_jsonl(parsed_feature)
         compliance = load_jsonl(parsed_compliance)
@@ -123,13 +139,16 @@ async def upload_feature(file: UploadFile = File(...)):
 
         # Build prompts
         terminology_prompt = build_prompt(data_dict, "variable_name", "variable_description")
-        # compliance_prompt = build_prompt(compliance, "compliance_title", "compliance_description")
         features_prompt = build_prompt(features, "feature_title", "feature_description")
 
         raw_docs = []
-        for feature in features:
-            query_text = f'{feature["feature_title"]} - {feature["feature_description"]}'
-            raw_docs.extend(rag_law_model.retrieve_docs(query_text))
+        for i in range(0, len(features), BATCH_SIZE):
+            batch = features[i:i + BATCH_SIZE]
+            for feature in batch:
+                query_text = f'{feature["feature_title"]} - {feature["feature_description"]}'
+                raw_docs.extend(rag_law_model.retrieve_docs(query_text))
+            time.sleep(SLEEP_SECONDS)
+            
 
         docs = []
         for doc in raw_docs:
@@ -145,6 +164,7 @@ async def upload_feature(file: UploadFile = File(...)):
             {terminology_prompt}
             </terminology>
         """
+
         result = "{}"
         if docs:
             result = rag_law_model.prompt(full_prompt.strip(), docs)
@@ -153,6 +173,7 @@ async def upload_feature(file: UploadFile = File(...)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 if __name__ == "__main__":
