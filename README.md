@@ -168,7 +168,7 @@ Regulatory Technology Gap: Recognized the significant opportunity in applying mo
 
 ### Document Upload and Processing
 
-- Support for multiple document formats (PDF, DOC, TXT)
+- Support for multiple document formats (PDF, CSV, TXT)
 - Automatic classification of document type (law vs feature)
 - Intelligent parsing with structured output generation
 - Real-time processing status updates
