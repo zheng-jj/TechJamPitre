@@ -60,7 +60,9 @@ async def upload_law(file: UploadFile = File(...)):
             if doc not in docs:
                 docs.append(doc)  # deduplicate with set
         result = {}
-        result = rag_feature_model.prompt(law_prompt, docs)
+        if len(docs) > 0:
+            result = rag_feature_model.prompt(law_prompt, docs)
+            
         return JSONResponse(content={'conflict': result, 'parsed_law': parsed_law})
     finally:
         # os.remove(temp_path)
