@@ -2,7 +2,7 @@ from langchain_core.documents import Document
 import json
 
 def law_to_document(jsonl_string):
-    json_list = jsonl_string.split("\n")
+    json_list = jsonl_string.strip().split("\n")
     return [Document(j, metadata={"id": json.loads(j)["id"]}) for j in json_list]
 
 def feature_to_document(features, compliances, data_dictionary):

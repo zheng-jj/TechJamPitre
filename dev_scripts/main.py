@@ -42,20 +42,26 @@ async def upload_law(file: UploadFile = File(...)):
             f.write(contents)
         parsed_law = LawParser.parse(temp_path)
         documents = law_to_document(parsed_law)
-        rag_law_model.update_vector_store(documents) # might error out due to api limits from free tier
-        law = load_jsonl(parsed_law)
+        rag_law_model.update_vector_store(documents) # might error out  due to api limits from free tier
+        laws = load_jsonl(parsed_law)
         
-        # Save all laws in one go to mongodb
-        resp = requests.post(f"{GO_BACKEND_URL}/provision", json=law)
-        if resp.status_code != 201:
-            print("Failed to save laws:", resp.text)
-
-        law_prompt = "<law>".join(
-            f'{i}. [{l["provision_code"]/l["law_code"]}] {l["provision_title"]} - {l["provision_body"]}'
-            for i, l in enumerate(law)
-        ) + "</law>"
-        result = rag_feature_model.prompt(law_prompt)
-        return JSONResponse(content=result)
+        # # Save all laws in one go to mongodb
+        # resp = requests.post(f"{GO_BACKEND_URL}/provision", json=law)
+        # if resp.status_code != 201:
+        #     print("Failed to save laws:", resp.text)
+        law_prompt = ""
+        raw_docs = []
+        for i, law in enumerate(laws):
+            law_prompt = f'{law_prompt}\n{i}. [{law["provision_code"]}/{law["law_code"]}] {law["provision_title"]} - {law["provision_body"]}'
+            doc_query_prompt = f'{law["provision_title"]} - {law["provision_body"]}'
+            raw_docs.extend(rag_feature_model.retrieve_docs(doc_query_prompt))
+        docs = []
+        for doc in raw_docs:
+            if doc not in docs:
+                docs.append(doc)  # deduplicate with set
+        result = {}
+        result = rag_feature_model.prompt(law_prompt, docs)
+        return JSONResponse(content={'conflict': result, 'parsed_law': parsed_law})
     finally:
         # os.remove(temp_path)
         pass
@@ -87,9 +93,9 @@ async def upload_feature(file: UploadFile = File(...)):
         data_dict = load_jsonl(parsed_data_dict)
 
         # Save all features in one go to mongodb
-        resp = requests.post(f"{GO_BACKEND_URL}/feature", json=features)
-        if resp.status_code != 201:
-            print("Failed to save features:", resp.text)
+        # resp = requests.post(f"{GO_BACKEND_URL}/feature", json=features)
+        # if resp.status_code != 201:
+        #     print("Failed to save features:", resp.text)
 
         # Build prompts
         terminology_prompt = build_prompt(data_dict, "variable_name", "variable_description")
@@ -119,9 +125,11 @@ async def upload_feature(file: UploadFile = File(...)):
             {compliance_prompt}
             </compliance_already_conformed>
         """
+        result = {}
+        if len(docs) > 0:
+            result = rag_law_model.prompt(full_prompt.strip(), docs)
 
-        result = rag_law_model.prompt(full_prompt.strip(), docs)
-        return JSONResponse(content=result)
+        return JSONResponse(content={'conflict': result, 'parsed_feature': parsed_feature})
     finally:
         # os.remove(temp_path)
         pass
