@@ -52,7 +52,7 @@ FEATURE_SCHEMA = {
           },
           "reasoning": {
             "type": "string",
-            "description": "How does the feature violate the provision"
+            "description": "List out all laws that has been violated the features and the reason for the violation"
           }
         },
         "required": [

@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import List, Optional
+from typing import List
 
 import faiss
 from langchain_community.docstore.in_memory import InMemoryDocstore
@@ -30,8 +30,8 @@ SCHEMA = {
                     "relevant_labels": {"type": "string", "description": "relevant_labels of provision violated."},
                     "law_code": {"type": "string", "description": "law_code of provision violated."},
                     "reference_file": {"type": "string", "description": "reference_file of provision violated."},
-                    "reasoning": {"type": "string", "description": "How does the feature violate the provision"},
-                    "id" : {"type": "string", "description": "id of provivision violated."},
+                    "reasoning": {"type": "string", "description": "List out all features that has violated the provision and how does the feature violate the provision"},
+                    "provision_id" : {"type": "string", "description": "id of provivision violated."},
                 },
                 "required": [
                     "provision_title",
@@ -74,7 +74,7 @@ class RAGLawModel:
             else:
                 self.logger.info(f"Creating new vector store at {VECTOR_STORE}")
                 os.makedirs(VECTOR_STORE, exist_ok=True)
-                index = faiss.IndexFlatL2(3072)  # Dimensionality should match embedding size
+                index = faiss.IndexFlatL2(3072)
 
                 vs = FAISS(
                     embedding_function=self.embedding,
