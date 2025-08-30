@@ -30,7 +30,8 @@ SCHEMA = {
                     "relevant_labels": {"type": "string", "description": "relevant_labels of provision violated."},
                     "law_code": {"type": "string", "description": "law_code of provision violated."},
                     "reference_file": {"type": "string", "description": "reference_file of provision violated."},
-                    "reasoning": {"type": "string", "description": "How does the feature violate the provision"}
+                    "reasoning": {"type": "string", "description": "How does the feature violate the provision"},
+                    "id" : {"type": "string", "description": "id of provivision violated."},
                 },
                 "required": [
                     "provision_title",
