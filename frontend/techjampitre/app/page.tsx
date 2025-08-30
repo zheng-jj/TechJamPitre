@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -12,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Upload, FileText, Scale, List, ArrowRight } from "lucide-react";
+import { Upload, FileText, Scale, List } from "lucide-react";
 import { toast } from "sonner";
 
 interface UploadResponse {
@@ -29,75 +28,23 @@ export default function Home() {
   const handleFileUpload = async (file: File, type: "feature" | "law") => {
     setIsUploading(true);
     setUploadType(type);
-
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("type", type);
 
-      // Commented out API call - replace with actual endpoint
-      /*
-      const response = await fetch('/api/upload', {
-        method: 'POST',
+      const response = await fetch("/api/upload", {
+        method: "POST",
         body: formData,
-      })
-      
-      const result: UploadResponse = await response.json()
-      
+      });
+      const result: UploadResponse = await response.json();
       if (response.ok) {
-        // Store the result in sessionStorage to pass to report page
-        sessionStorage.setItem('uploadResult', JSON.stringify(result))
-        router.push('/report')
-      } else {
-        toast.error('Upload failed. Please try again.')
-      }
-      */
-
-      // Simulate upload and redirect for demo
-      setTimeout(() => {
-        const mockResult: UploadResponse = {
-          type,
-          conflicts:
-            type === "feature"
-              ? [
-                  {
-                    country: "USA",
-                    region: "California",
-                    law: "CCPA",
-                    lawDesc: "California Consumer Privacy Act",
-                    relevantLabels: ["privacy", "data"],
-                    source: "state-law",
-                  },
-                  {
-                    country: "EU",
-                    region: "All",
-                    law: "GDPR",
-                    lawDesc: "General Data Protection Regulation",
-                    relevantLabels: ["privacy", "consent"],
-                    source: "eu-regulation",
-                  },
-                ]
-              : [
-                  {
-                    featureName: "Auto-tracking",
-                    featureType: "Analytics",
-                    featureDescription: "Automatic user behavior tracking",
-                    relevantLabels: ["tracking", "analytics"],
-                    source: "product-spec",
-                  },
-                  {
-                    featureName: "Data Export",
-                    featureType: "Data Management",
-                    featureDescription: "Bulk data export functionality",
-                    relevantLabels: ["data", "export"],
-                    source: "api-docs",
-                  },
-                ],
-          message: `${type} uploaded successfully`,
-        };
-        sessionStorage.setItem("uploadResult", JSON.stringify(mockResult));
+        console.log(JSON.stringify(result));
+        sessionStorage.setItem("uploadResult", JSON.stringify(result));
         router.push("/report");
-      }, 2000);
+      } else {
+        toast.error("Upload failed. Please try again.");
+      }
     } catch (error) {
       toast.error("An error occurred during upload");
     } finally {
@@ -125,8 +72,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-6 flex items-center justify-center">
+      <div className="w-full max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -143,14 +90,15 @@ export default function Home() {
         </motion.div>
 
         {/* Upload Sections */}
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* Feature Upload */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
+            className="space-y-4"
           >
-            <Card className="h-full hover:shadow-lg transition-shadow duration-300">
+            <Card className="h-full hover:shadow-lg transition-shadow duration-300 border-0 shadow-none">
               <CardHeader className="text-center">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FileText className="w-8 h-8 text-blue-600" />
@@ -176,13 +124,13 @@ export default function Home() {
                     Drop your feature documentation here or click to browse
                   </p>
                   <p className="text-sm text-gray-500">
-                    PDF, DOC, TXT files accepted
+                    PDF, CSV files accepted
                   </p>
                   <input
                     id="feature-upload"
                     type="file"
                     className="hidden"
-                    accept=".pdf,.doc,.docx,.txt"
+                    accept=".pdf, .csv"
                     onChange={(e) => handleFileSelect(e, "feature")}
                     disabled={isUploading}
                   />
@@ -201,6 +149,24 @@ export default function Home() {
                 )}
               </CardContent>
             </Card>
+
+            {/* View Features Button - Desktop only, centered below this card */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+              className="hidden md:flex justify-center"
+            >
+              <Button
+                onClick={() => router.push("/features")}
+                variant="ghost"
+                size="sm"
+                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+              >
+                <List className="w-4 h-4" />
+                View All Features
+              </Button>
+            </motion.div>
           </motion.div>
 
           {/* Law Upload */}
@@ -208,8 +174,9 @@ export default function Home() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
+            className="space-y-4"
           >
-            <Card className="h-full hover:shadow-lg transition-shadow duration-300">
+            <Card className="h-full hover:shadow-lg transition-shadow duration-300 border-0 shadow-none">
               <CardHeader className="text-center">
                 <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Scale className="w-8 h-8 text-purple-600" />
@@ -231,13 +198,13 @@ export default function Home() {
                     Drop your legal documentation here or click to browse
                   </p>
                   <p className="text-sm text-gray-500">
-                    PDF, DOC, TXT files accepted
+                    PDF, CSV files accepted
                   </p>
                   <input
                     id="law-upload"
                     type="file"
                     className="hidden"
-                    accept=".pdf,.doc,.docx,.txt"
+                    accept=".pdf, .csv"
                     onChange={(e) => handleFileSelect(e, "law")}
                     disabled={isUploading}
                   />
@@ -256,36 +223,55 @@ export default function Home() {
                 )}
               </CardContent>
             </Card>
+
+            {/* View Laws Button - Desktop only, centered below this card */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 1.0 }}
+              className="hidden md:flex justify-center"
+            >
+              <Button
+                onClick={() => router.push("/laws")}
+                variant="ghost"
+                size="sm"
+                className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 flex items-center gap-2"
+              >
+                <List className="w-4 h-4" />
+                View All Laws
+              </Button>
+            </motion.div>
           </motion.div>
         </div>
 
-        {/* Navigation Buttons */}
+        {/* Mobile Navigation Buttons - Static positioning, stacked vertically */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center"
+          transition={{ duration: 0.5, delay: 0.8 }}
+          className="md:hidden mt-12 space-y-3"
         >
-          <Button
-            onClick={() => router.push("/features")}
-            variant="outline"
-            size="lg"
-            className="flex items-center gap-2 hover:bg-blue-50"
-          >
-            <List className="w-5 h-5" />
-            View All Features
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-          <Button
-            onClick={() => router.push("/laws")}
-            variant="outline"
-            size="lg"
-            className="flex items-center gap-2 hover:bg-purple-50"
-          >
-            <List className="w-5 h-5" />
-            View All Laws
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+          <div className="flex flex-col gap-3 max-w-xs mx-auto">
+            <Button
+              onClick={() => router.push("/features")}
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+            >
+              <List className="w-4 h-4" />
+              View All Features
+            </Button>
+
+            <Button
+              onClick={() => router.push("/laws")}
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 flex items-center gap-2"
+            >
+              <List className="w-4 h-4" />
+              View All Laws
+            </Button>
+          </div>
         </motion.div>
       </div>
     </div>

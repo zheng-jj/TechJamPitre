@@ -1,94 +1,52 @@
 package main
 
 import (
-    "encoding/json"
-    "fmt"
-    "io/ioutil"
-    "log"
-    "net/http"
+	"log"
+	"net/http"
+
+	"backend/db"
+	"backend/handlers"
 )
 
-type Law struct {
-    ID          int      `json:"id"`
-    Country     string   `json:"country"`
-    Region      string   `json:"region"`
-    Law         string   `json:"law"`
-    Description string   `json:"law_description"`
-    Labels      []string `json:"relevant_labels"`
-    Source      string   `json:"source"`
-}
-
-type Feature struct {
-    ID          int      `json:"id"`
-    Name        string   `json:"feature_name"`
-    Type        string   `json:"feature_type"`
-    Description string   `json:"feature_description"`
-    Labels      []string `json:"relevant_labels"`
-    Source      string   `json:"source"`
-}
-
-
-// Mappings for compliance links
-var featureDataset = []Feature{}
-var lawDataset = []Law{}
-var lawFeatureLinks = map[string][]string{} // lawID -> []feature names
-
-func uploadFeatureHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != "POST" {
-        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
-    var feature Feature
-    body, _ := ioutil.ReadAll(r.Body)
-    if err := json.Unmarshal(body, &feature); err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
-        return
-    }
-    featureDataset = append(featureDataset, feature)
-    
-    // TODO: Call RAG retrieval + agent inference here
-    // For now, just respond successfully
-    w.WriteHeader(http.StatusOK)
-    fmt.Fprintf(w, "Feature uploaded and processed!")
-	log.Printf("Current features: %+v\n", featureDataset)
-
-}
-
-func uploadLawHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != "POST" {
-        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
-    var law Law
-    body, _ := ioutil.ReadAll(r.Body)
-    if err := json.Unmarshal(body, &law); err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
-        return
-    }
-    lawDataset = append(lawDataset, law)
-    
-    // TODO: Call RAG retrieval + agent inference here
-    w.WriteHeader(http.StatusOK)
-    fmt.Fprintf(w, "Law uploaded and processed!")
-	log.Printf("Current laws: %+v\n", lawDataset)
-}
-
-func listFeaturesHandler(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(featureDataset)
-}
-
-func listLawsHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(lawDataset)
-}
-
 func main() {
-    http.HandleFunc("/upload/feature", uploadFeatureHandler)
-    http.HandleFunc("/upload/law", uploadLawHandler)
-	http.HandleFunc("/features", listFeaturesHandler)
-	http.HandleFunc("/laws", listLawsHandler)
+	// Connect to MongoDB
+	client := db.ConnectMongo("mongodb://localhost:27017")
+	defer client.Disconnect(nil)
+	database := client.Database("compliance_db")
 
-    log.Println("Server running at :8080")
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	// Setup unique index for links
+	db.SetupLinkUniqueIndex(database)
+
+	// Upload endpoints
+	http.HandleFunc("/upload/feature", handlers.UploadFeatureHandler)
+	http.HandleFunc("/upload/law", handlers.UploadLawHandler)
+
+	// Feature CRUD
+	http.HandleFunc("/features", handlers.ListFeatures(database))
+	http.HandleFunc("/feature", handlers.CreateFeature(database))
+	http.HandleFunc("/feature/get", handlers.GetFeature(database))
+	http.HandleFunc("/feature/update", handlers.UpdateFeature(database))
+	http.HandleFunc("/feature/delete", handlers.DeleteFeature(database))
+
+	// Provision CRUD
+	http.HandleFunc("/provisions", handlers.ListProvisions(database))
+	http.HandleFunc("/provision", handlers.CreateProvision(database))
+	http.HandleFunc("/provision/get", handlers.GetProvision(database))
+	http.HandleFunc("/provision/update", handlers.UpdateProvision(database))
+	http.HandleFunc("/provision/delete", handlers.DeleteProvision(database))
+
+	// Feature-Provision Link CRUD
+	http.HandleFunc("/link", handlers.CreateLink(database))
+	http.HandleFunc("/link/get/provisions", handlers.GetProvisionsByFeature(database))
+	http.HandleFunc("/link/get/features", handlers.GetFeaturesByProvision(database))
+	http.HandleFunc("/link/update", handlers.UpdateLink(database))
+	http.HandleFunc("/link/delete/features", handlers.DeleteLinksByFeature(database))
+	http.HandleFunc("/link/delete/provisions", handlers.DeleteLinksByProvision(database))
+
+	// Serve uploaded files
+	fs := http.FileServer(http.Dir("./uploaded_files"))
+	http.Handle("/files/", http.StripPrefix("/files/", fs))
+
+	log.Println("Server running at :8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }

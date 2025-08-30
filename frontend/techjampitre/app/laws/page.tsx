@@ -223,15 +223,11 @@ export default function Laws() {
                 Manage your legal documentation
               </p>
             </div>
-            <Button className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Add Law
-            </Button>
           </div>
 
           {/* Search and Filter Bar */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="relative">
+            <div className="relative md:col-span-2">
               <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
               <Input
                 placeholder="Search laws..."
@@ -266,10 +262,6 @@ export default function Laws() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Filter className="w-4 h-4" />
-              More Filters
-            </Button>
           </div>
         </motion.div>
 
