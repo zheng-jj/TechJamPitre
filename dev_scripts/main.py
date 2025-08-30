@@ -7,13 +7,18 @@ from dotenv import load_dotenv
 from parser.LawParser import LawParser
 from parser.FeatureParser import FeatureParser
 from model.RAGLawModel import RAGLawModel
-from model.utils import jsonl_to_document
+from model.FeatureRagModel import FeatureRagModel
+from model.utils import law_to_document, feature_to_document
 
 load_dotenv(dotenv_path=".ENV")
 
 app = FastAPI()
 
 rag_law_model = RAGLawModel()
+rag_feature_model = FeatureRagModel()
+def load_jsonl(jsonl_string):
+    """Load a JSONL file into a list of dicts."""
+    return [json.loads(line) for line in jsonl_string.split("\n") if line.strip()]
 
 @app.get("/")
 def root():
@@ -26,24 +31,35 @@ def root():
 async def parse_law(file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
-    temp_path = f"./temp/{file.filename}"
-    contents = await file.read()
-    os.makedirs("./temp", exist_ok=True)
-    with open(temp_path, "wb") as f:
-        f.write(contents)
     try:
-        parsed_law = LawParser.parse(temp_path)
-        documents = jsonl_to_document(parsed_law)
-        rag_law_model.update_vector_store(documents) # might error out due to api limits from free tier
-        #!!!!!!!!! call rag_feature_model.prompt
         #!!!!!!!!! store parsed_law into nosql
-        return JSONResponse(content={"parsed_law": parsed_law, "model_answer": "answer"})
+        temp_path = f"./temp/{file.filename}"
+        contents = await file.read()
+        os.makedirs("./temp", exist_ok=True)
+        with open(temp_path, "wb") as f:
+            f.write(contents)
+        parsed_law = LawParser.parse(temp_path)
+        documents = law_to_document(parsed_law)
+        rag_law_model.update_vector_store(documents) # might error out due to api limits from free tier
+        law = load_jsonl(parsed_law)
+        law_prompt = "<law>".join(
+            f'{i}. [{l["provision_code"]/l["law_code"]}] {l["provision_title"]} - {l["provision_body"]}'
+            for i, l in enumerate(law)
+        ) + "</law>"
+        result = rag_feature_model.prompt(law_prompt)
+        return JSONResponse(content=result)
     finally:
         # os.remove(temp_path)
         pass
 
 @app.post("/upload/feature")
 async def parse_feature(file: UploadFile = File(...)):
+    def build_prompt(items, title_key, desc_key):
+        """Build a numbered prompt string from list of dicts."""
+        return "\n".join(
+            f"{i}. {item[title_key]} - {item[desc_key]}"
+            for i, item in enumerate(items)
+        )
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
     try:
@@ -54,18 +70,9 @@ async def parse_feature(file: UploadFile = File(...)):
             f.write(contents)
         # path should be in database store**
         parsed_feature, parsed_compliance, parsed_data_dict = FeatureParser.parse(temp_path)
-        #!!!!!!!! to docs -> call rag_feature_model.update_vector_store
         #!!!!!!!! store parsed_feature, parsed_compliance, parsed_data_dict to nosql
-        
-        def build_prompt(items, title_key, desc_key):
-            """Build a numbered prompt string from list of dicts."""
-            return "\n".join(
-                f"{i}. {item[title_key]} - {item[desc_key]}"
-                for i, item in enumerate(items)
-            )
-        def load_jsonl(jsonl_string):
-            """Load a JSONL file into a list of dicts."""
-            return [json.loads(line) for line in jsonl_string.split("\n") if line.strip()]
+        documents = feature_to_document(parsed_feature, parsed_compliance, parsed_data_dict)
+        rag_feature_model.update_vector_store(documents)
         
         features = load_jsonl(parsed_feature)
         compliance = load_jsonl(parsed_compliance)
@@ -105,16 +112,6 @@ async def parse_feature(file: UploadFile = File(...)):
     finally:
         # os.remove(temp_path)
         pass
-
-# api call for /query/feature/:id
-# fetch compliance and data_dict from nosql
-# create prompt from feature, compliance and data_dict
-# prompt rag_law_model
-
-# api call for /query/law/:id
-# fetch law from nosql
-# create prompt from law
-# prompt rag_query_model
 
 if __name__ == "__main__":
     import uvicorn
