@@ -3,6 +3,7 @@ from google.genai import types
 from pydantic import BaseModel, Field
 from typing import List
 import json
+import uuid
 
 class Feature(BaseModel):
     feature_title: str = Field(description="The name of the feature. No abbreviated format, the name must in full.")
@@ -58,8 +59,36 @@ class FeatureParser:
     def _parse_response(response, file_path):
         raw = response[response.find("{"): response.rfind("}")+1]
         data = json.loads(raw)
-        data["reference_file"] = file_path
-        return json.dumps(data)
+        project_name = data["project_name"]
+        project_id = str(uuid.uuid4())
+        
+        # output feature in jsonl
+        feature_jsonl = ""
+        for feature in data["features"]:
+            feature["feature_id"] = str(uuid.uuid4())
+            feature["project_name"] = project_name
+            feature["reference_file"] = file_path
+            feature["project_id"] = project_id
+            feature_jsonl = f"{feature_jsonl}{json.dumps(feature)}\n"
+
+        # output compliance in jsonl
+        compliance_jsonl = ""
+        for compliance_term in data["compliance_terms"]:
+            compliance_term["compliance_id"] = str(uuid.uuid4())
+            compliance_term["project_name"] = project_name
+            compliance_term["reference_file"] = file_path
+            compliance_term["project_id"] = project_id
+            compliance_jsonl = f"{compliance_jsonl}{json.dumps(compliance_term)}\n"
+
+        # output data_dictionary in jsonl
+        dictionary_jsonl = ""
+        for record in data["data_dictionary"]:
+            record["dictionary_id"] = str(uuid.uuid4())
+            record["project_name"] = project_name
+            record["reference_file"] = file_path
+            record["project_id"] = project_id
+            dictionary_jsonl = f"{dictionary_jsonl}{json.dumps(record)}\n"
+        return feature_jsonl, compliance_jsonl, dictionary_jsonl
     
     def parse(file_path):
         res = FeatureParser._send_request(file_path)
