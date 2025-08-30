@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 import os
+import json
 from dotenv import load_dotenv
 
 from parser.LawParser import LawParser
@@ -45,13 +46,14 @@ async def parse_law(file: UploadFile = File(...)):
 async def parse_feature(file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
-    # temp_path = f"./temp/{file.filename}"
-    # contents = await file.read()
-    # os.makedirs("./temp", exist_ok=True)
-    # with open(temp_path, "wb") as f:
-    #     f.write(contents)
     try:
-        parsed_feature, parsed_compliance, parsed_data_dict = FeatureParser.parse(file)
+        temp_path = f"./temp/{file.filename}"
+        contents = await file.read()
+        os.makedirs("./temp", exist_ok=True)
+        with open(temp_path, "wb") as f:
+            f.write(contents)
+        # path should be in database store**
+        parsed_feature, parsed_compliance, parsed_data_dict = FeatureParser.parse(temp_path)
         #!!!!!!!! to docs -> call rag_feature_model.update_vector_store
         #!!!!!!!! store parsed_feature, parsed_compliance, parsed_data_dict to nosql
         
@@ -61,15 +63,22 @@ async def parse_feature(file: UploadFile = File(...)):
                 f"{i}. {item[title_key]} - {item[desc_key]}"
                 for i, item in enumerate(items)
             )
+        def load_jsonl(jsonl_string):
+            """Load a JSONL file into a list of dicts."""
+            return [json.loads(line) for line in jsonl_string.split("\n") if line.strip()]
+        
+        features = load_jsonl(parsed_feature)
+        compliance = load_jsonl(parsed_compliance)
+        data_dict = load_jsonl(parsed_data_dict)
 
         # Build prompts
-        terminology_prompt = build_prompt(parsed_data_dict, "variable_name", "variable_description")
-        compliance_prompt = build_prompt(parsed_compliance, "compliance_title", "compliance_description")
-        features_prompt = build_prompt(parsed_feature, "feature_title", "feature_description")
+        terminology_prompt = build_prompt(data_dict, "variable_name", "variable_description")
+        compliance_prompt = build_prompt(compliance, "compliance_title", "compliance_description")
+        features_prompt = build_prompt(features, "feature_title", "feature_description")
 
         # Retrieve docs (deduplicate)
         raw_docs = []
-        for feature in parsed_feature:
+        for feature in features:
             query_text = f'{feature["feature_title"]} - {feature["feature_description"]}'
             raw_docs.extend(rag_law_model.retrieve_docs(query_text))
 
