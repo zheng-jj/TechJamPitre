@@ -34,11 +34,11 @@ func TestMultipleLinks(t *testing.T) {
 
 	// ---------- 1️⃣ Create multiple links ----------
 	links := []models.FeatureProvisionLink{
-		{FeatureID: 1, ProvisionID: 101},
-		{FeatureID: 1, ProvisionID: 102},
-		{FeatureID: 1, ProvisionID: 103},
-		{FeatureID: 2, ProvisionID: 101},
-		{FeatureID: 3, ProvisionID: 101},
+		{FeatureID: "1", ProvisionID: "101"},
+		{FeatureID: "1", ProvisionID: "102"},
+		{FeatureID: "1", ProvisionID: "103"},
+		{FeatureID: "2", ProvisionID: "101"},
+		{FeatureID: "3", ProvisionID: "101"},
 	}
 
 	for _, l := range links {

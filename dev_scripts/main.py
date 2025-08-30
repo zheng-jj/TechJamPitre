@@ -45,10 +45,19 @@ async def upload_law(file: UploadFile = File(...)):
         rag_law_model.update_vector_store(documents) # might error out  due to api limits from free tier
         laws = load_jsonl(parsed_law)
         
-        # # Save all laws in one go to mongodb
-        # resp = requests.post(f"{GO_BACKEND_URL}/provision", json=law)
-        # if resp.status_code != 201:
-        #     print("Failed to save laws:", resp.text)
+
+        # Save all laws one by one to MongoDB
+        for provision in laws:
+            # Fix "relevant_labels": convert string -> list of strings
+            if isinstance(provision.get("relevant_labels"), str):
+                provision["relevant_labels"] = [
+                    label.strip() for label in provision["relevant_labels"].split(",")
+                ]
+                
+            resp = requests.post(f"{GO_BACKEND_URL}/provision", json=provision)
+            if resp.status_code != 201:
+                print(f"Failed to save provision {provision.get('provision_code')}: {resp.text}")
+
         law_prompt = ""
         raw_docs = []
         for i, law in enumerate(laws):
@@ -86,7 +95,6 @@ async def upload_feature(file: UploadFile = File(...)):
             f.write(contents)
         # path should be in database store**
         parsed_feature, parsed_compliance, parsed_data_dict = FeatureParser.parse(temp_path)
-        #!!!!!!!! store parsed_feature, parsed_compliance, parsed_data_dict to nosql
         documents = feature_to_document(parsed_feature, parsed_compliance, parsed_data_dict)
         rag_feature_model.update_vector_store(documents)
         
@@ -94,10 +102,11 @@ async def upload_feature(file: UploadFile = File(...)):
         compliance = load_jsonl(parsed_compliance)
         data_dict = load_jsonl(parsed_data_dict)
 
-        # Save all features in one go to mongodb
-        # resp = requests.post(f"{GO_BACKEND_URL}/feature", json=features)
-        # if resp.status_code != 201:
-        #     print("Failed to save features:", resp.text)
+       # Save all features one by one to MongoDB
+        for feature in features:
+            resp = requests.post(f"{GO_BACKEND_URL}/feature", json=feature)
+            if resp.status_code != 201:
+                print(f"Failed to save feature {feature.get('feature_title')}: {resp.text}")
 
         # Build prompts
         terminology_prompt = build_prompt(data_dict, "variable_name", "variable_description")
