@@ -11,7 +11,7 @@ type Feature struct {
 }
 
 type Provision struct {
-	ProvisionID    int      `bson:"provision_id" json:"provision_id"`
+	ProvisionID    int      `bson:"provision_id" json:"id"`
 	ProvisionTitle string   `bson:"provision_title" json:"provision_title"`
 	ProvisionBody  string   `bson:"provision_body" json:"provision_body"`
 	ProvisionCode  string   `bson:"provision_code" json:"provision_code"`
@@ -20,6 +20,19 @@ type Provision struct {
 	RelevantLabels []string `bson:"relevant_labels" json:"relevant_labels"`
 	LawCode        string   `bson:"law_code" json:"law_code"`
 	ReferenceFile  string   `bson:"reference_file" json:"reference_file"`
+}
+
+type ReasoningProvision struct {
+	ProvisionID    int      `bson:"provision_id" json:"id"`
+	ProvisionTitle string   `bson:"provision_title" json:"provision_title"`
+	ProvisionBody  string   `bson:"provision_body" json:"provision_body"`
+	ProvisionCode  string   `bson:"provision_code" json:"provision_code"`
+	Country        string   `bson:"country" json:"country"`
+	Region         string   `bson:"region" json:"region"`
+	RelevantLabels []string `bson:"relevant_labels" json:"relevant_labels"`
+	LawCode        string   `bson:"law_code" json:"law_code"`
+	ReferenceFile  string   `bson:"reference_file" json:"reference_file"`
+	Reasoning      string   `bson:"reasoning" json:"reasoning"`
 }
 
 type FeatureProvisionLink struct {

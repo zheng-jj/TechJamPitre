@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -10,6 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"backend/models"
 )
 
 // ---------------- Helper Function ----------------
@@ -102,15 +105,102 @@ func UploadFeatureHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respBody, statusCode, err := forwardToFastAPI(filePath, "http://localhost:8000/parse/feature")
+	// respBody
+	_, statusCode, err := forwardToFastAPI(filePath, "http://localhost:8000/parse/feature")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Hardcoded features
+	feature1 := models.Feature{
+		FeatureID:          1,
+		FeatureTitle:       "Login Feature",
+		FeatureDescription: "Allows users to log in securely",
+		FeatureType:        "Security",
+		ProjectName:        "Auth System",
+		ReferenceFile:      "login.pdf",
+		ProjectID:          101,
+	}
+	feature2 := models.Feature{
+		FeatureID:          2,
+		FeatureTitle:       "Signup Feature",
+		FeatureDescription: "Allows new users to register",
+		FeatureType:        "Onboarding",
+		ProjectName:        "Auth System",
+		ReferenceFile:      "signup.pdf",
+		ProjectID:          101,
+	}
+
+	// Hardcoded provisions (for conflicts)
+	provision1 := models.ReasoningProvision{
+		ProvisionID:    1,
+		ProvisionTitle: "Section 1",
+		ProvisionBody:  "User data must be encrypted",
+		ProvisionCode:  "LAW101",
+		Country:        "SG",
+		Region:         "APAC",
+		RelevantLabels: []string{"encryption", "security"},
+		LawCode:        "PDPA-101",
+		ReferenceFile:  "law1.pdf",
+		Reasoning:      "Encryption ensures confidentiality",
+	}
+	provision2 := models.ReasoningProvision{
+		ProvisionID:    2,
+		ProvisionTitle: "Section 2",
+		ProvisionBody:  "Users must consent to terms",
+		ProvisionCode:  "LAW102",
+		Country:        "SG",
+		Region:         "APAC",
+		RelevantLabels: []string{"consent", "privacy"},
+		LawCode:        "PDPA-102",
+		ReferenceFile:  "law2.pdf",
+		Reasoning:      "Consent ensures lawful processing",
+	}
+	provision3 := models.ReasoningProvision{
+		ProvisionID:    3,
+		ProvisionTitle: "Section 3",
+		ProvisionBody:  "Store minimal personal data",
+		ProvisionCode:  "LAW103",
+		Country:        "SG",
+		Region:         "APAC",
+		RelevantLabels: []string{"data minimization"},
+		LawCode:        "PDPA-103",
+		ReferenceFile:  "law3.pdf",
+		Reasoning:      "Minimization reduces risk",
+	}
+	provision4 := models.ReasoningProvision{
+		ProvisionID:    4,
+		ProvisionTitle: "Section 4",
+		ProvisionBody:  "Provide right to data deletion",
+		ProvisionCode:  "LAW104",
+		Country:        "SG",
+		Region:         "APAC",
+		RelevantLabels: []string{"right to erasure"},
+		LawCode:        "PDPA-104",
+		ReferenceFile:  "law4.pdf",
+		Reasoning:      "Users must have control of their data",
+	}
+
+	// ----- conflict mapping: featureID → provisions -----
+	conflictMap := map[string][]models.ReasoningProvision{
+		"201": {provision1, provision2}, // feature1 conflicts with provision1/provision2
+		"202": {provision3, provision4}, // feature2 conflicts with provision3/provision4
+	}
+
+	// Construct response
+	response := map[string]interface{}{
+		"type":     "feature",
+		"features": []models.Feature{feature1, feature2},
+		"conflict": []map[string][]models.ReasoningProvision{conflictMap},
+		"message":  "feature uploaded successfully",
+	}
+
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	w.Write(respBody)
+	json.NewEncoder(w).Encode(response)
+
 
 	log.Printf("Uploaded feature PDF: %s → parsed by FastAPI\n", filepath.Base(filePath))
 }
@@ -128,15 +218,99 @@ func UploadLawHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respBody, statusCode, err := forwardToFastAPI(filePath, "http://localhost:8000/parse/law")
+	_, statusCode, err := forwardToFastAPI(filePath, "http://localhost:8000/parse/law")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+
+	// Hardcoded provisions 
+	provision1 := models.ReasoningProvision{
+		ProvisionID:    1,
+		ProvisionTitle: "Section 1",
+		ProvisionBody:  "Users must consent before data collection",
+		ProvisionCode:  "LAW201",
+		Country:        "SG",
+		Region:         "APAC",
+		RelevantLabels: []string{"consent", "privacy"},
+		LawCode:        "PDPA-201",
+		ReferenceFile:  "law1.pdf",
+		Reasoning:      "Consent is required under PDPA",
+	}
+	provision2 := models.ReasoningProvision{
+		ProvisionID:    2,
+		ProvisionTitle: "Section 2",
+		ProvisionBody:  "Data must be stored securely",
+		ProvisionCode:  "LAW202",
+		Country:        "SG",
+		Region:         "APAC",
+		RelevantLabels: []string{"security", "storage"},
+		LawCode:        "PDPA-202",
+		ReferenceFile:  "law2.pdf",
+		Reasoning:      "Secure storage prevents breaches",
+	}
+
+	// Hardcoded features
+	feature1 := models.Feature{
+		FeatureID:          101,
+		FeatureTitle:       "Login Feature",
+		FeatureDescription: "Secure login with multi-factor authentication",
+		FeatureType:        "Security",
+		ProjectName:        "Auth System",
+		ReferenceFile:      "feature_dataset/0000 - gamma j.pdf",
+		ProjectID:          1001,
+	}
+	feature2 := models.Feature{
+		FeatureID:          102,
+		FeatureTitle:       "Signup Feature",
+		FeatureDescription: "User registration with email verification",
+		FeatureType:        "Onboarding",
+		ProjectName:        "Auth System",
+		ReferenceFile:      "feature_dataset/0000 - gamma j.pdf",
+		ProjectID:          1001,
+	}
+	feature3 := models.Feature{
+		FeatureID:          103,
+		FeatureTitle:       "Profile Feature",
+		FeatureDescription: "User profile management and preferences",
+		FeatureType:        "User Management",
+		ProjectName:        "Auth System",
+		ReferenceFile:      "feature_dataset/0000 - gamma j.pdf",
+		ProjectID:          1001,
+	}
+	feature4 := models.Feature{
+		FeatureID:          104,
+		FeatureTitle:       "Notification Feature",
+		FeatureDescription: "System notifications and alerts",
+		FeatureType:        "Communication",
+		ProjectName:        "Auth System",
+		ReferenceFile:      "feature_dataset/0000 - gamma j.pdf",
+		ProjectID:          1001,
+	}
+
+	conflictMap := map[string][]models.Feature{
+		// keys are provision IDs as strings
+		"1": {feature1, feature2}, // provision 1 conflicts with feature1/2
+		"2": {feature3, feature4}, // provision 2 conflicts with feature3/4
+	}
+
+	// Construct response
+	response := map[string]interface{}{
+		"type":       "law",
+		"provisions": []models.ReasoningProvision{provision1, provision2},
+		"conflict":   []map[string][]models.Feature{conflictMap}, // keep as slice for same shape as your spec
+		"message":    "law uploaded successfully",
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	w.Write(respBody)
+		// return 200 OK with the mocked JSON
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "failed to encode response: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 
 	log.Printf("Uploaded law PDF: %s → parsed by FastAPI\n", filepath.Base(filePath))
 }
