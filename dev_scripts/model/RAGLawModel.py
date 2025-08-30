@@ -81,8 +81,7 @@ class RAGLawModel:
         self.llm = ChatGoogleGenerativeAI(model = "gemini-2.5-flash", response_mime_type = "application/json", response_schema = SCHEMA)
         self.embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
         self.vector_store = self._get_vector_store()
-    
-
+        
     def _get_vector_store(self):
         if os.path.isdir(VECTOR_STORE):
             return FAISS.load_local(
@@ -111,6 +110,7 @@ class RAGLawModel:
         You MUST ONLY respond with a JSON object that conforms to the 'Answer' schema.
         Your response should start with a '{{' and end with a '}}'. Do not include any other text, explanations, or markdown formatting.
 
+        The context will contain compliances that are conformed or considered, if it resolves any provision violation, ignore the violation.
         If you find relevant provisions in the context, extract them according to the schema.
         If the context is empty or you cannot find any relevant provisions, you MUST return a JSON object with an empty list for the "provisions" key.
 
@@ -127,9 +127,15 @@ class RAGLawModel:
         self.vector_store.add_documents(documents)
         self.vector_store.save_local(VECTOR_STORE)
 
+    def retrieve_docs(self, feature):
+        retriever = self.vector_store.as_retriever(search_type="similarity_score_threshold", search_kwargs={'fetch_k': len(self.vector_store.docstore._dict), 'k': len(self.vector_store.docstore._dict), 'score_threshold': 0.6})
+        return retriever.invoke(feature)
+    
     # prompt rag model
-    def prompt(self, prompt):
+    def prompt(self, prompt, docs):
         document_chain = create_stuff_documents_chain(self.llm, self._generate_template())
-        retrieval_chain = create_retrieval_chain(self.vector_store.as_retriever(search_type="similarity_score_threshold", search_kwargs={'fetch_k': len(self.vector_store.docstore._dict), 'k': len(self.vector_store.docstore._dict), 'score_threshold': 0.6}), document_chain)
-        response = retrieval_chain.invoke({"input": prompt})
-        return response["answer"]
+        response = document_chain.invoke({
+            "input": prompt,
+            "context": docs
+        })
+        return response
