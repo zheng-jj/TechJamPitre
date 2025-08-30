@@ -3,6 +3,7 @@ from google.genai import types
 import json
 from pydantic import BaseModel, Field
 from typing import List
+import uuid
 
 class Provision(BaseModel):
     provision_title: str = Field(description="The title of the provision.")
@@ -60,6 +61,7 @@ class LawParser:
         out = ""
         for provision in provisions:
             provision = provision | data
+            provision["id"] = str(uuid.uuid4())
             provision["reference_file"] = file_path
             out = f"{out}{json.dumps(provision)}\n"
         return out
