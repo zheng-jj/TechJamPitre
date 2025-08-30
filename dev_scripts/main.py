@@ -2,6 +2,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 import os
 import json
+import requests
 from dotenv import load_dotenv
 
 from parser.LawParser import LawParser
@@ -14,8 +15,11 @@ load_dotenv(dotenv_path=".ENV")
 
 app = FastAPI()
 
+GO_BACKEND_URL = os.getenv("GO_BACKEND_URL") 
+
 rag_law_model = RAGLawModel()
 rag_feature_model = FeatureRagModel()
+
 def load_jsonl(jsonl_string):
     """Load a JSONL file into a list of dicts."""
     return [json.loads(line) for line in jsonl_string.split("\n") if line.strip()]
@@ -23,17 +27,15 @@ def load_jsonl(jsonl_string):
 @app.get("/")
 def root():
     print("hello")
-    print(os.getenv("GEMINI_API_KEY"))
-    print(os.getenv("GOOGLE_API_KEY"))
     return {"message": "Welcome to the python services!"}
 
 @app.post("/upload/law")
-async def parse_law(file: UploadFile = File(...)):
+async def upload_law(file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
     try:
         #!!!!!!!!! store parsed_law into nosql
-        temp_path = f"./temp/{file.filename}"
+        temp_path = os.path.join("./temp", os.path.basename(file.filename))
         contents = await file.read()
         os.makedirs("./temp", exist_ok=True)
         with open(temp_path, "wb") as f:
@@ -42,6 +44,12 @@ async def parse_law(file: UploadFile = File(...)):
         documents = law_to_document(parsed_law)
         rag_law_model.update_vector_store(documents) # might error out due to api limits from free tier
         law = load_jsonl(parsed_law)
+        
+        # Save all laws in one go to mongodb
+        resp = requests.post(f"{GO_BACKEND_URL}/provision", json=law)
+        if resp.status_code != 201:
+            print("Failed to save laws:", resp.text)
+
         law_prompt = "<law>".join(
             f'{i}. [{l["provision_code"]/l["law_code"]}] {l["provision_title"]} - {l["provision_body"]}'
             for i, l in enumerate(law)
@@ -53,7 +61,7 @@ async def parse_law(file: UploadFile = File(...)):
         pass
 
 @app.post("/upload/feature")
-async def parse_feature(file: UploadFile = File(...)):
+async def upload_feature(file: UploadFile = File(...)):
     def build_prompt(items, title_key, desc_key):
         """Build a numbered prompt string from list of dicts."""
         return "\n".join(
@@ -63,7 +71,7 @@ async def parse_feature(file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
     try:
-        temp_path = f"./temp/{file.filename}"
+        temp_path = os.path.join("./temp", os.path.basename(file.filename))
         contents = await file.read()
         os.makedirs("./temp", exist_ok=True)
         with open(temp_path, "wb") as f:
@@ -77,6 +85,11 @@ async def parse_feature(file: UploadFile = File(...)):
         features = load_jsonl(parsed_feature)
         compliance = load_jsonl(parsed_compliance)
         data_dict = load_jsonl(parsed_data_dict)
+
+        # Save all features in one go to mongodb
+        resp = requests.post(f"{GO_BACKEND_URL}/feature", json=features)
+        if resp.status_code != 201:
+            print("Failed to save features:", resp.text)
 
         # Build prompts
         terminology_prompt = build_prompt(data_dict, "variable_name", "variable_description")
