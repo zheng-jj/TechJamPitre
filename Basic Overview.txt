@@ -21,13 +21,13 @@ llm
 	agent to parse new data to be added to dataset instruction llm -> input -> json
 		fixed format, break it down into further labels.
 
-dataset
-	law
-		country, region, law, law desc, relevant labels, source
-	feature
-		feature name, feature type, feature description, relevant labels, source
-	jargon
-		abbreviation, full form, relevant labels, source
+	dataset
+		law
+			country, region, law, law desc, relevant labels, source
+		feature
+			feature name, feature type, feature description, relevant labels, source
+		jargon
+			abbreviation, full form, relevant labels, source
 
 report generation for emails
 	sent to relevant stakeholders
