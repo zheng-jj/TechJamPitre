@@ -208,7 +208,7 @@ Regulatory Technology Gap: Recognized the significant opportunity in applying mo
 
 ```bash
 # Clone the repository
-git clone [repository-url]
+git clone [[repository-url]](https://github.com/zheng-jj/TechJamPitre)
 cd frontend/techjampitre
 
 # Install dependencies
