@@ -38,96 +38,65 @@ import {
   Trash2,
   Filter,
   Globe,
+  Scale,
+  FileText,
+  Hash,
 } from "lucide-react";
 import { toast } from "sonner";
 
-interface Law {
+// Updated interface to match your API response
+interface LawProvision {
   id: string;
+  provision_title: string;
+  provision_body: string;
+  provision_code: string;
   country: string;
   region: string;
-  law: string;
-  lawDesc: string;
-  relevantLabels: string[];
-  source: string;
-  createdAt: string;
+  relevant_labels: string[];
+  law_code: string;
+  reference_file: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  response: LawProvision[];
 }
 
 export default function Laws() {
   const router = useRouter();
-  const [laws, setLaws] = useState<Law[]>([]);
-  const [filteredLaws, setFilteredLaws] = useState<Law[]>([]);
+  const [laws, setLaws] = useState<LawProvision[]>([]);
+  const [filteredLaws, setFilteredLaws] = useState<LawProvision[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCountry, setFilterCountry] = useState("all");
-  const [filterSource, setFilterSource] = useState("all");
+  const [filterLawCode, setFilterLawCode] = useState("all");
+  const [filterRegion, setFilterRegion] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
-  const [editingLaw, setEditingLaw] = useState<Law | null>(null);
+  const [editingLaw, setEditingLaw] = useState<LawProvision | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const mockLaws: Law[] = [
-      {
-        id: "1",
-        country: "USA",
-        region: "California",
-        law: "CCPA",
-        lawDesc:
-          "California Consumer Privacy Act - Provides consumers with rights to know, delete, and opt-out of the sale of their personal information",
-        relevantLabels: ["privacy", "data", "consumer-rights"],
-        source: "state-law",
-        createdAt: "2024-01-10",
-      },
-      {
-        id: "2",
-        country: "EU",
-        region: "All Member States",
-        law: "GDPR",
-        lawDesc:
-          "General Data Protection Regulation - Comprehensive data protection law governing how personal data is collected, processed, and stored",
-        relevantLabels: ["privacy", "consent", "data-protection"],
-        source: "eu-regulation",
-        createdAt: "2024-01-15",
-      },
-      {
-        id: "3",
-        country: "Canada",
-        region: "Federal",
-        law: "PIPEDA",
-        lawDesc:
-          "Personal Information Protection and Electronic Documents Act - Federal privacy law for private sector organizations",
-        relevantLabels: ["privacy", "personal-information", "consent"],
-        source: "federal-law",
-        createdAt: "2024-01-20",
-      },
-      {
-        id: "4",
-        country: "Brazil",
-        region: "Federal",
-        law: "LGPD",
-        lawDesc:
-          "Lei Geral de Proteção de Dados - General Data Protection Law regulating data processing activities",
-        relevantLabels: ["data-protection", "privacy", "consent"],
-        source: "federal-law",
-        createdAt: "2024-02-01",
-      },
-      {
-        id: "5",
-        country: "USA",
-        region: "Federal",
-        law: "COPPA",
-        lawDesc:
-          "Children's Online Privacy Protection Act - Protects the privacy of children under 13 years old online",
-        relevantLabels: ["children", "privacy", "online"],
-        source: "federal-law",
-        createdAt: "2024-02-05",
-      },
-    ];
+  const getLaws = async () => {
+    try {
+      const response = await fetch("/api/law", {
+        method: "POST",
+      });
+      const result: ApiResponse = await response.json();
 
-    setTimeout(() => {
-      setLaws(mockLaws);
-      setFilteredLaws(mockLaws);
+      if (response.ok && result.success) {
+        setLaws(result.response);
+        setIsLoading(false);
+      } else {
+        toast.error("Failed to load law provisions. Please try again.");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Error fetching law provisions:", error);
+      toast.error("Failed to load law provisions. Please try again.");
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    getLaws();
   }, []);
 
   // Filter and search logic
@@ -137,11 +106,15 @@ export default function Laws() {
     if (searchTerm) {
       filtered = filtered.filter(
         (law) =>
-          law.law.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          law.lawDesc.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          law.provision_title
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          law.provision_body.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          law.provision_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
           law.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
           law.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          law.relevantLabels.some((label) =>
+          law.law_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          law.relevant_labels.some((label) =>
             label.toLowerCase().includes(searchTerm.toLowerCase())
           )
       );
@@ -151,23 +124,27 @@ export default function Laws() {
       filtered = filtered.filter((law) => law.country === filterCountry);
     }
 
-    if (filterSource !== "all") {
-      filtered = filtered.filter((law) => law.source === filterSource);
+    if (filterRegion !== "all") {
+      filtered = filtered.filter((law) => law.region === filterRegion);
+    }
+
+    if (filterLawCode !== "all") {
+      filtered = filtered.filter((law) => law.law_code === filterLawCode);
     }
 
     setFilteredLaws(filtered);
-  }, [laws, searchTerm, filterCountry, filterSource]);
+  }, [laws, searchTerm, filterCountry, filterRegion, filterLawCode]);
 
-  const handleEdit = (law: Law) => {
+  const handleEdit = (law: LawProvision) => {
     setEditingLaw(law);
     setIsDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this law?")) {
+    if (confirm("Are you sure you want to delete this law provision?")) {
       // API call would go here
       setLaws(laws.filter((l) => l.id !== id));
-      toast.success("Law deleted successfully");
+      toast.success("Law provision deleted successfully");
     }
   };
 
@@ -179,14 +156,16 @@ export default function Laws() {
       setLaws(laws.map((l) => (l.id === editingLaw.id ? editingLaw : l)));
       setIsDialogOpen(false);
       setEditingLaw(null);
-      toast.success("Law updated successfully");
+      toast.success("Law provision updated successfully");
     } catch (error) {
-      toast.error("Failed to update law");
+      toast.error("Failed to update law provision");
     }
   };
 
-  const uniqueCountries = [...new Set(laws.map((l) => l.country))];
-  const uniqueSources = [...new Set(laws.map((l) => l.source))];
+  // Get unique values for filters using Array.from to avoid Set iteration issues
+  const uniqueCountries = Array.from(new Set(laws.map((l) => l.country)));
+  const uniqueRegions = Array.from(new Set(laws.map((l) => l.region)));
+  const uniqueLawCodes = Array.from(new Set(laws.map((l) => l.law_code)));
 
   if (isLoading) {
     return (
@@ -217,20 +196,21 @@ export default function Laws() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                Laws & Regulations
+                Law Provisions
               </h1>
               <p className="text-xl text-gray-600">
-                Manage your legal documentation
+                Manage your legal provision documentation ({laws.length}{" "}
+                provisions found)
               </p>
             </div>
           </div>
 
           {/* Search and Filter Bar */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
             <div className="relative md:col-span-2">
               <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
               <Input
-                placeholder="Search laws..."
+                placeholder="Search provisions, titles, codes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -249,15 +229,28 @@ export default function Laws() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={filterSource} onValueChange={setFilterSource}>
+            <Select value={filterRegion} onValueChange={setFilterRegion}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by source" />
+                <SelectValue placeholder="Filter by region" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Sources</SelectItem>
-                {uniqueSources.map((source) => (
-                  <SelectItem key={source} value={source}>
-                    {source}
+                <SelectItem value="all">All Regions</SelectItem>
+                {uniqueRegions.map((region) => (
+                  <SelectItem key={region} value={region}>
+                    {region}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterLawCode} onValueChange={setFilterLawCode}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by law" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Laws</SelectItem>
+                {uniqueLawCodes.map((lawCode) => (
+                  <SelectItem key={lawCode} value={lawCode}>
+                    {lawCode}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -279,18 +272,39 @@ export default function Laws() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <Card className="h-full hover:shadow-lg transition-shadow duration-300">
+              <Card className="h-full hover:shadow-lg transition-shadow duration-300 border-l-4 border-l-purple-500">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Globe className="w-4 h-4 text-purple-600" />
-                        <Badge variant="outline">{law.country}</Badge>
-                        <Badge variant="secondary">{law.region}</Badge>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Scale className="w-4 h-4 text-purple-600" />
+                        <Badge variant="outline" className="text-xs">
+                          {law.country}
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {law.region}
+                        </Badge>
+                        <Badge variant="default" className="text-xs">
+                          ID: {law.id}
+                        </Badge>
                       </div>
-                      <CardTitle className="text-xl mb-2">{law.law}</CardTitle>
-                      <CardDescription className="text-sm">
-                        {law.lawDesc}
+
+                      <CardTitle className="text-lg mb-2 leading-tight">
+                        {law.provision_title}
+                      </CardTitle>
+
+                      <div className="flex items-center gap-2 mb-2">
+                        <Hash className="w-3 h-3 text-gray-500" />
+                        <Badge variant="outline" className="text-xs font-mono">
+                          {law.provision_code}
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {law.law_code}
+                        </Badge>
+                      </div>
+
+                      <CardDescription className="text-sm leading-relaxed">
+                        {law.provision_body}
                       </CardDescription>
                     </div>
                     <div className="flex gap-2 ml-4">
@@ -315,24 +329,27 @@ export default function Laws() {
                 <CardContent>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-xs font-medium text-gray-700 mb-1">
+                      <p className="text-xs font-medium text-gray-700 mb-2">
                         Relevant Labels:
                       </p>
                       <div className="flex flex-wrap gap-1">
-                        {law.relevantLabels.map((label, labelIndex) => (
+                        {law.relevant_labels.map((label, labelIndex) => (
                           <Badge
                             key={labelIndex}
                             variant="outline"
-                            className="text-xs"
+                            className="text-xs bg-purple-50 border-purple-200"
                           >
                             {label}
                           </Badge>
                         ))}
                       </div>
                     </div>
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>Source: {law.source}</span>
-                      <span>{law.createdAt}</span>
+
+                    <div className="flex items-center gap-2 pt-2">
+                      <FileText className="w-4 h-4 text-gray-500" />
+                      <span className="text-xs text-gray-600 truncate">
+                        {law.reference_file}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -341,14 +358,16 @@ export default function Laws() {
           ))}
         </motion.div>
 
-        {filteredLaws.length === 0 && (
+        {filteredLaws.length === 0 && !isLoading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
             <p className="text-gray-500 text-lg">
-              No laws found matching your criteria.
+              {laws.length === 0
+                ? "No law provisions found. Try uploading some legal documents first."
+                : "No law provisions found matching your criteria."}
             </p>
           </motion.div>
         )}
@@ -357,13 +376,71 @@ export default function Laws() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>Edit Law</DialogTitle>
+              <DialogTitle>Edit Law Provision</DialogTitle>
               <DialogDescription>
-                Make changes to the law information below.
+                Make changes to the law provision information below.
               </DialogDescription>
             </DialogHeader>
             {editingLaw && (
               <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Provision Title</Label>
+                  <Input
+                    id="title"
+                    value={editingLaw.provision_title}
+                    onChange={(e) =>
+                      setEditingLaw({
+                        ...editingLaw,
+                        provision_title: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="code">Provision Code</Label>
+                    <Input
+                      id="code"
+                      value={editingLaw.provision_code}
+                      onChange={(e) =>
+                        setEditingLaw({
+                          ...editingLaw,
+                          provision_code: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="lawCode">Law Code</Label>
+                    <Input
+                      id="lawCode"
+                      value={editingLaw.law_code}
+                      onChange={(e) =>
+                        setEditingLaw({
+                          ...editingLaw,
+                          law_code: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="body">Provision Body</Label>
+                  <Textarea
+                    id="body"
+                    value={editingLaw.provision_body}
+                    onChange={(e) =>
+                      setEditingLaw({
+                        ...editingLaw,
+                        provision_body: e.target.value,
+                      })
+                    }
+                    rows={4}
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="country">Country</Label>
@@ -392,58 +469,34 @@ export default function Laws() {
                     />
                   </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="law">Law Name</Label>
-                  <Input
-                    id="law"
-                    value={editingLaw.law}
-                    onChange={(e) =>
-                      setEditingLaw({
-                        ...editingLaw,
-                        law: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={editingLaw.lawDesc}
-                    onChange={(e) =>
-                      setEditingLaw({
-                        ...editingLaw,
-                        lawDesc: e.target.value,
-                      })
-                    }
-                  />
-                </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="labels">
                     Relevant Labels (comma-separated)
                   </Label>
                   <Input
                     id="labels"
-                    value={editingLaw.relevantLabels.join(", ")}
+                    value={editingLaw.relevant_labels.join(", ")}
                     onChange={(e) =>
                       setEditingLaw({
                         ...editingLaw,
-                        relevantLabels: e.target.value
+                        relevant_labels: e.target.value
                           .split(", ")
                           .map((s) => s.trim()),
                       })
                     }
                   />
                 </div>
+
                 <div className="grid gap-2">
-                  <Label htmlFor="source">Source</Label>
+                  <Label htmlFor="reference">Reference File</Label>
                   <Input
-                    id="source"
-                    value={editingLaw.source}
+                    id="reference"
+                    value={editingLaw.reference_file}
                     onChange={(e) =>
                       setEditingLaw({
                         ...editingLaw,
-                        source: e.target.value,
+                        reference_file: e.target.value,
                       })
                     }
                   />

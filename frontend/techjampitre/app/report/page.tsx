@@ -28,7 +28,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 interface LawProvision {
-  id: number;
+  id: string;
   provision_title: string;
   provision_body: string;
   provision_code: string;
@@ -41,13 +41,13 @@ interface LawProvision {
 }
 
 interface Feature {
-  feature_id: number;
+  feature_id: string;
   feature_title: string;
   feature_description: string;
   feature_type: string;
   project_name: string;
   reference_file: string;
-  project_id: number;
+  project_id: string;
   reasoning?: string;
 }
 
@@ -90,7 +90,6 @@ export default function Report() {
 
   useEffect(() => {
     const data = sessionStorage.getItem("uploadResult");
-    console.log(data);
     if (data) {
       try {
         const parsedData: ApiResponse = JSON.parse(data);
@@ -179,6 +178,10 @@ export default function Report() {
     if (!reportData) return;
 
     try {
+      // Generate CSV data first
+      const csvData = generateCSVData();
+      downloadCSV(csvData);
+
       // Create a temporary div with the content to export
       const exportElement = document.createElement("div");
       exportElement.style.padding = "40px";
@@ -198,119 +201,224 @@ export default function Report() {
         reportData.provisions && reportData.provisions.length > 0;
 
       exportElement.innerHTML = `
-      <div style="margin-bottom: 40px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px;">
-        <h1 style="font-size: 28px; font-weight: bold; color: #111827; margin-bottom: 10px; margin-top: 0;">
-          Compliance Report
-        </h1>
-        <p style="font-size: 18px; color: #6b7280; margin-bottom: 5px; margin-top: 0;">
-          ${
-            isFeatureReport
-              ? "Feature analysis against existing laws"
-              : "Law analysis against existing features"
-          }
-        </p>
+    <div style="margin-bottom: 40px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px;">
+      <h1 style="font-size: 28px; font-weight: bold; color: #111827; margin-bottom: 10px; margin-top: 0;">
+        Compliance Report
+      </h1>
+      <p style="font-size: 18px; color: #6b7280; margin-bottom: 5px; margin-top: 0;">
         ${
-          reportData.message
-            ? `<p style="font-size: 12px; color: #9ca3af; margin-top: 0;">${reportData.message}</p>`
-            : ""
+          isFeatureReport
+            ? "Feature analysis against existing laws"
+            : "Law analysis against existing features"
         }
-        <p style="font-size: 12px; color: #9ca3af; text-align: right; margin-top: 10px;">
-          Generated on ${currentDate}
-        </p>
-      </div>
-
-      <div style="padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid ${
-        hasConflicts ? "#ef4444" : "#22c55e"
-      }; background-color: ${hasConflicts ? "#fef2f2" : "#f0fdf4"};">
-        <h3 style="font-size: 16px; font-weight: bold; color: ${
-          hasConflicts ? "#dc2626" : "#16a34a"
-        }; margin-bottom: 8px; margin-top: 0;">
-          ${hasConflicts ? "Compliance Issues Found" : "No Compliance Issues"}
-        </h3>
-        <p style="font-size: 14px; color: ${
-          hasConflicts ? "#dc2626" : "#16a34a"
-        }; line-height: 1.5; margin-top: 0;">
-          ${
-            hasConflicts
-              ? `Found ${reportData.conflicts.length} ${
-                  isFeatureReport ? "law provision" : "feature"
-                }${
-                  reportData.conflicts.length > 1 ? "s" : ""
-                } that may conflict with your ${
-                  isFeatureReport ? "feature" : "law"
-                }.`
-              : "Your submission appears to be compliant with all applicable regulations."
-          }
-        </p>
-      </div>
-
+      </p>
       ${
-        isFeatureReport && hasFeatures
-          ? `
-        <div style="margin-bottom: 40px;">
-          <h2 style="font-size: 22px; font-weight: bold; color: #111827; margin-bottom: 20px; border-bottom: 1px solid #d1d5db; padding-bottom: 8px; margin-top: 0;">
-            📄 Analyzed Features (${reportData.features.length})
-          </h2>
-          ${reportData.features
-            .map(
-              (feature) => `
-            <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px; background-color: #fafafa;">
-              <h3 style="font-size: 16px; font-weight: bold; color: #111827; margin-bottom: 8px; margin-top: 0;">${feature.feature_title}</h3>
-              <p style="font-size: 14px; color: #6b7280; margin-bottom: 12px; margin-top: 0;">${feature.feature_description}</p>
-              <div style="margin-bottom: 10px;">
-                <span style="font-size: 12px; margin-right: 20px;"><strong>Type:</strong> ${feature.feature_type}</span>
-                <span style="font-size: 12px; margin-right: 20px;"><strong>ID:</strong> ${feature.feature_id}</span>
-                <span style="font-size: 12px;"><strong>Project:</strong> ${feature.project_name}</span>
-              </div>
-              <p style="font-size: 12px; color: #374151; margin-bottom: 0;">Reference: ${feature.reference_file}</p>
-            </div>
-          `
-            )
-            .join("")}
-        </div>
-      `
+        reportData.message
+          ? `<p style="font-size: 12px; color: #9ca3af; margin-top: 0;">${reportData.message}</p>`
           : ""
       }
+      <p style="font-size: 12px; color: #9ca3af; text-align: right; margin-top: 10px;">
+        Generated on ${currentDate}
+      </p>
+    </div>
 
-      ${
-        !isFeatureReport && hasProvisions
-          ? `
-        <div style="margin-bottom: 40px;">
-          <h2 style="font-size: 22px; font-weight: bold; color: #111827; margin-bottom: 20px; border-bottom: 1px solid #d1d5db; padding-bottom: 8px; margin-top: 0;">
-            ⚖️ Uploaded Law Provisions (${reportData.provisions.length})
-          </h2>
-          ${reportData.provisions
-            .map(
-              (provision) => `
-            <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px; background-color: #fafafa;">
-              <h3 style="font-size: 16px; font-weight: bold; color: #111827; margin-bottom: 8px; margin-top: 0;">${
-                provision.provision_title
-              } (${provision.provision_code})</h3>
-              <p style="font-size: 14px; color: #6b7280; margin-bottom: 12px; margin-top: 0;">${
-                provision.provision_body
-              }</p>
-              <div style="margin-bottom: 10px;">
-                <span style="font-size: 12px; margin-right: 20px;"><strong>Country:</strong> ${
-                  provision.country
-                }</span>
-                <span style="font-size: 12px; margin-right: 20px;"><strong>Region:</strong> ${
-                  provision.region
-                }</span>
-                <span style="font-size: 12px;"><strong>Law Code:</strong> ${
-                  provision.law_code
-                }</span>
+    <div style="padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid ${
+      hasConflicts ? "#ef4444" : "#22c55e"
+    }; background-color: ${hasConflicts ? "#fef2f2" : "#f0fdf4"};">
+      <h3 style="font-size: 16px; font-weight: bold; color: ${
+        hasConflicts ? "#dc2626" : "#16a34a"
+      }; margin-bottom: 8px; margin-top: 0;">
+        ${hasConflicts ? "Compliance Issues Found" : "No Compliance Issues"}
+      </h3>
+      <p style="font-size: 14px; color: ${
+        hasConflicts ? "#dc2626" : "#16a34a"
+      }; line-height: 1.5; margin-top: 0;">
+        ${
+          hasConflicts
+            ? `Found ${reportData.conflicts.length} ${
+                isFeatureReport ? "law provision" : "feature"
+              }${
+                reportData.conflicts.length > 1 ? "s" : ""
+              } that may conflict with your ${
+                isFeatureReport ? "feature" : "law"
+              }.`
+            : "Your submission appears to be compliant with all applicable regulations."
+        }
+      </p>
+    </div>
+
+    ${
+      isFeatureReport && hasFeatures
+        ? `
+      <div style="margin-bottom: 40px;">
+        <h2 style="font-size: 22px; font-weight: bold; color: #111827; margin-bottom: 20px; border-bottom: 1px solid #d1d5db; padding-bottom: 8px; margin-top: 0;">
+          📄 Analyzed Features (${reportData.features.length})
+        </h2>
+        ${reportData.features
+          .map(
+            (feature) => `
+          <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px; background-color: #fafafa;">
+            <h3 style="font-size: 16px; font-weight: bold; color: #111827; margin-bottom: 8px; margin-top: 0;">${feature.feature_title}</h3>
+            <p style="font-size: 14px; color: #6b7280; margin-bottom: 12px; margin-top: 0;">${feature.feature_description}</p>
+            <div style="margin-bottom: 10px;">
+              <span style="font-size: 12px; margin-right: 20px;"><strong>Type:</strong> ${feature.feature_type}</span>
+              <span style="font-size: 12px; margin-right: 20px;"><strong>ID:</strong> ${feature.feature_id}</span>
+              <span style="font-size: 12px;"><strong>Project:</strong> ${feature.project_name}</span>
+            </div>
+            <p style="font-size: 12px; color: #374151; margin-bottom: 0;">Reference: ${feature.reference_file}</p>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    `
+        : ""
+    }
+
+    ${
+      !isFeatureReport && hasProvisions
+        ? `
+      <div style="margin-bottom: 40px;">
+        <h2 style="font-size: 22px; font-weight: bold; color: #111827; margin-bottom: 20px; border-bottom: 1px solid #d1d5db; padding-bottom: 8px; margin-top: 0;">
+          ⚖️ Uploaded Law Provisions (${reportData.provisions.length})
+        </h2>
+        ${reportData.provisions
+          .map(
+            (provision) => `
+          <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px; background-color: #fafafa;">
+            <h3 style="font-size: 16px; font-weight: bold; color: #111827; margin-bottom: 8px; margin-top: 0;">${
+              provision.provision_title
+            } (${provision.provision_code})</h3>
+            <p style="font-size: 14px; color: #6b7280; margin-bottom: 12px; margin-top: 0;">${
+              provision.provision_body
+            }</p>
+            <div style="margin-bottom: 10px;">
+              <span style="font-size: 12px; margin-right: 20px;"><strong>Country:</strong> ${
+                provision.country
+              }</span>
+              <span style="font-size: 12px; margin-right: 20px;"><strong>Region:</strong> ${
+                provision.region
+              }</span>
+              <span style="font-size: 12px;"><strong>Law Code:</strong> ${
+                provision.law_code
+              }</span>
+            </div>
+            ${
+              provision.relevant_labels && provision.relevant_labels.length > 0
+                ? `
+              <div style="margin-top: 12px; margin-bottom: 10px;">
+                <p style="font-size: 12px; font-weight: bold; margin-bottom: 8px; margin-top: 0;">Relevant Labels:</p>
+                <div style="line-height: 2;">
+                  ${provision.relevant_labels
+                    .map(
+                      (label) =>
+                        `<span style="display: inline-flex; align-items: center; justify-content: center; margin: 0 6px 6px 0; padding: 4px 8px; border-radius: 4px; background-color: #f3f4f6; border: 1px solid #d1d5db; font-size: 10px; color: #374151; min-height: 20px; line-height: 1;">${label}</span>`
+                    )
+                    .join("")}
+                </div>
               </div>
+            `
+                : ""
+            }
+            <p style="font-size: 12px; color: #374151; margin-bottom: 0;">Reference: ${
+              provision.reference_file
+            }</p>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    `
+        : ""
+    }
+
+    ${
+      hasConflicts
+        ? `
+      <div style="margin-bottom: 40px;">
+        <h2 style="font-size: 22px; font-weight: bold; color: #111827; margin-bottom: 20px; border-bottom: 1px solid #d1d5db; padding-bottom: 8px; margin-top: 0;">
+          ⚠️ ${
+            isFeatureReport
+              ? "Conflicting Law Provisions"
+              : "Conflicting Features"
+          } (${reportData.conflicts.length})
+        </h2>
+        ${reportData.conflicts
+          .map((item) => {
+            const isLawProvision = "provision_title" in item;
+            return `
+            <div style="border: 1px solid #e5e7eb; border-left: 4px solid #ef4444; border-radius: 8px; padding: 20px; margin-bottom: 15px; background-color: #fafafa;">
               ${
-                provision.relevant_labels &&
-                provision.relevant_labels.length > 0
+                isLawProvision
                   ? `
-                <div style="margin-top: 12px; margin-bottom: 10px;">
+                <h3 style="font-size: 16px; font-weight: bold; color: #111827; margin-bottom: 8px; margin-top: 0; line-height: 1.4;">
+                  ${item.provision_title} (${item.provision_code})
+                </h3>
+                <p style="font-size: 14px; color: #6b7280; margin-bottom: 12px; margin-top: 0;">${item.provision_body}</p>
+                <div style="margin-bottom: 15px;">
+                  <span style="font-size: 12px; margin-right: 20px;"><strong>Country:</strong> ${item.country}</span>
+                  <span style="font-size: 12px; margin-right: 20px;"><strong>Region:</strong> ${item.region}</span>
+                  <span style="font-size: 12px;"><strong>Law Code:</strong> ${item.law_code}</span>
+                </div>
+              `
+                  : `
+                <h3 style="font-size: 16px; font-weight: bold; color: #111827; margin-bottom: 8px; margin-top: 0; line-height: 1.4;">
+                  ${item.feature_title} (${item.feature_type})
+                </h3>
+                <p style="font-size: 14px; color: #6b7280; margin-bottom: 12px; margin-top: 0;">${item.feature_description}</p>
+                <div style="margin-bottom: 15px;">
+                  <span style="font-size: 12px; margin-right: 20px;"><strong>Project:</strong> ${item.project_name}</span>
+                  <span style="font-size: 12px; margin-right: 20px;"><strong>ID:</strong> ${item.feature_id}</span>
+                  <span style="font-size: 12px;"><strong>Project ID:</strong> ${item.project_id}</span>
+                </div>
+              `
+              }
+              
+              ${
+                (isLawProvision && isFeatureReport) ||
+                (!isLawProvision && !isFeatureReport)
+                  ? `
+                <div style="background-color: ${
+                  isFeatureReport ? "#eff6ff" : "#fff7ed"
+                }; padding: 15px; border-radius: 6px; border-left: 3px solid ${
+                      isFeatureReport ? "#3b82f6" : "#f97316"
+                    }; margin: 15px 0;">
+                  <p style="font-size: 12px; font-weight: bold; color: ${
+                    isFeatureReport ? "#1e40af" : "#ea580c"
+                  }; margin-bottom: 5px; margin-top: 0;">
+                    ${
+                      isFeatureReport
+                        ? "Why this law conflicts with your feature:"
+                        : "Why this feature conflicts with your law:"
+                    }
+                  </p>
+                  <p style="font-size: 11px; color: ${
+                    isFeatureReport ? "#1e3a8a" : "#9a3412"
+                  }; line-height: 1.4; margin-bottom: 0; margin-top: 0;">
+                    ${
+                      isLawProvision
+                        ? item.reasoning
+                        : item.reasoning ||
+                          "This feature's implementation may not comply with the requirements of the uploaded law provision."
+                    }
+                  </p>
+                </div>
+              `
+                  : ""
+              }
+              
+              ${
+                isLawProvision &&
+                item.relevant_labels &&
+                item.relevant_labels.length > 0
+                  ? `
+                <div style="margin: 15px 0;">
                   <p style="font-size: 12px; font-weight: bold; margin-bottom: 8px; margin-top: 0;">Relevant Labels:</p>
-                  <div style="line-height: 1.8;">
-                    ${provision.relevant_labels
+                  <div style="line-height: 2;">
+                    ${item.relevant_labels
                       .map(
                         (label) =>
-                          `<span style="display: inline-block; margin: 0 6px 6px 0; padding: 3px 8px; border-radius: 4px; background-color: #f3f4f6; border: 1px solid #d1d5db; font-size: 10px; color: #374151;">${label}</span>`
+                          `<span style="display: inline-flex; align-items: center; justify-content: center; margin: 0 6px 6px 0; padding: 4px 8px; border-radius: 4px; background-color: #f3f4f6; border: 1px solid #d1d5db; font-size: 10px; color: #374151; min-height: 20px; line-height: 1;">${label}</span>`
                       )
                       .join("")}
                   </div>
@@ -318,166 +426,57 @@ export default function Report() {
               `
                   : ""
               }
-              <p style="font-size: 12px; color: #374151; margin-bottom: 0;">Reference: ${
-                provision.reference_file
-              }</p>
+              
+              <p style="font-size: 12px; color: #374151; margin-top: 15px; margin-bottom: 0; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+                <strong>Reference:</strong> ${item.reference_file}
+              </p>
             </div>
-          `
-            )
-            .join("")}
-        </div>
-      `
-          : ""
-      }
-
-      ${
-        hasConflicts
-          ? `
-        <div style="margin-bottom: 40px;">
-          <h2 style="font-size: 22px; font-weight: bold; color: #111827; margin-bottom: 20px; border-bottom: 1px solid #d1d5db; padding-bottom: 8px; margin-top: 0;">
-            ⚠️ ${
-              isFeatureReport
-                ? "Conflicting Law Provisions"
-                : "Conflicting Features"
-            } (${reportData.conflicts.length})
-          </h2>
-          ${reportData.conflicts
-            .map((item) => {
-              const isLawProvision = "provision_title" in item;
-              return `
-              <div style="border: 1px solid #e5e7eb; border-left: 4px solid #ef4444; border-radius: 8px; padding: 20px; margin-bottom: 15px; background-color: #fafafa;">
-                ${
-                  isLawProvision
-                    ? `
-                  <h3 style="font-size: 16px; font-weight: bold; color: #111827; margin-bottom: 8px; margin-top: 0; line-height: 1.4;">
-                    ${item.provision_title} (${item.provision_code})
-                    <span style="display: inline-block; background-color: #ef4444; color: white; font-weight: bold; padding: 2px 6px; margin-left: 8px; border-radius: 4px; font-size: 11px; vertical-align: middle;">CONFLICT</span>
-                  </h3>
-                  <p style="font-size: 14px; color: #6b7280; margin-bottom: 12px; margin-top: 0;">${item.provision_body}</p>
-                  <div style="margin-bottom: 15px;">
-                    <span style="font-size: 12px; margin-right: 20px;"><strong>Country:</strong> ${item.country}</span>
-                    <span style="font-size: 12px; margin-right: 20px;"><strong>Region:</strong> ${item.region}</span>
-                    <span style="font-size: 12px;"><strong>Law Code:</strong> ${item.law_code}</span>
-                  </div>
-                `
-                    : `
-                  <h3 style="font-size: 16px; font-weight: bold; color: #111827; margin-bottom: 8px; margin-top: 0; line-height: 1.4;">
-                    ${item.feature_title} (${item.feature_type})
-                    <span style="display: inline-block; background-color: #ef4444; color: white; font-weight: bold; padding: 2px 6px; margin-left: 8px; border-radius: 4px; font-size: 11px; vertical-align: middle;">CONFLICT</span>
-                  </h3>
-                  <p style="font-size: 14px; color: #6b7280; margin-bottom: 12px; margin-top: 0;">${item.feature_description}</p>
-                  <div style="margin-bottom: 15px;">
-                    <span style="font-size: 12px; margin-right: 20px;"><strong>Project:</strong> ${item.project_name}</span>
-                    <span style="font-size: 12px; margin-right: 20px;"><strong>ID:</strong> ${item.feature_id}</span>
-                    <span style="font-size: 12px;"><strong>Project ID:</strong> ${item.project_id}</span>
-                  </div>
-                `
-                }
-                
-                ${
-                  (isLawProvision && isFeatureReport) ||
-                  (!isLawProvision && !isFeatureReport)
-                    ? `
-                  <div style="background-color: ${
-                    isFeatureReport ? "#eff6ff" : "#fff7ed"
-                  }; padding: 15px; border-radius: 6px; border-left: 3px solid ${
-                        isFeatureReport ? "#3b82f6" : "#f97316"
-                      }; margin: 15px 0;">
-                    <p style="font-size: 12px; font-weight: bold; color: ${
-                      isFeatureReport ? "#1e40af" : "#ea580c"
-                    }; margin-bottom: 5px; margin-top: 0;">
-                      ${
-                        isFeatureReport
-                          ? "Why this law conflicts with your feature:"
-                          : "Why this feature conflicts with your law:"
-                      }
-                    </p>
-                    <p style="font-size: 11px; color: ${
-                      isFeatureReport ? "#1e3a8a" : "#9a3412"
-                    }; line-height: 1.4; margin-bottom: 0; margin-top: 0;">
-                      ${
-                        isLawProvision
-                          ? item.reasoning
-                          : item.reasoning ||
-                            "This feature's implementation may not comply with the requirements of the uploaded law provision."
-                      }
-                    </p>
-                  </div>
-                `
-                    : ""
-                }
-                
-                ${
-                  isLawProvision &&
-                  item.relevant_labels &&
-                  item.relevant_labels.length > 0
-                    ? `
-                  <div style="margin: 15px 0;">
-                    <p style="font-size: 12px; font-weight: bold; margin-bottom: 8px; margin-top: 0;">Relevant Labels:</p>
-                    <div style="line-height: 1.8;">
-                      ${item.relevant_labels
-                        .map(
-                          (label) =>
-                            `<span style="display: inline-block; margin: 0 6px 6px 0; padding: 3px 8px; border-radius: 4px; background-color: #f3f4f6; border: 1px solid #d1d5db; font-size: 10px; color: #374151;">${label}</span>`
-                        )
-                        .join("")}
-                    </div>
-                  </div>
-                `
-                    : ""
-                }
-                
-                <p style="font-size: 12px; color: #374151; margin-top: 15px; margin-bottom: 0; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                  <strong>Reference:</strong> ${item.reference_file}
-                </p>
-              </div>
-            `;
-            })
-            .join("")}
-        </div>
-      `
-          : ""
-      }
-
-      <div style="margin-top: 40px; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr>
-            <td style="text-align: center; padding: 10px; width: 33.33%;">
-              <div style="font-size: 24px; font-weight: bold; color: #3b82f6; margin-bottom: 8px;">
-                ${
-                  isFeatureReport
-                    ? reportData.features.length
-                    : reportData.provisions.length
-                }
-              </div>
-              <div style="font-size: 12px; color: #6b7280;">
-                ${isFeatureReport ? "Features" : "Provisions"} Analyzed
-              </div>
-            </td>
-            <td style="text-align: center; padding: 10px; width: 33.33%;">
-              <div style="font-size: 24px; font-weight: bold; color: #ef4444; margin-bottom: 8px;">
-                ${reportData.conflicts.length}
-              </div>
-              <div style="font-size: 12px; color: #6b7280;">
-                ${isFeatureReport ? "Law" : "Feature"} Conflicts Found
-              </div>
-            </td>
-            <td style="text-align: center; padding: 10px; width: 33.33%;">
-              <div style="font-size: 24px; font-weight: bold; color: #22c55e; margin-bottom: 8px;">
-                ${reportData.success ? "✓" : "✗"}
-              </div>
-              <div style="font-size: 12px; color: #6b7280;">Analysis Status</div>
-            </td>
-          </tr>
-        </table>
+          `;
+          })
+          .join("")}
       </div>
+    `
+        : ""
+    }
 
-      <div style="margin-top: 30px; text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 15px;">
-        This report was generated automatically by the Compliance Checker system.
-      </div>
-    `;
+    <div style="margin-top: 40px; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="text-align: center; padding: 10px; width: 33.33%;">
+            <div style="font-size: 24px; font-weight: bold; color: #3b82f6; margin-bottom: 8px;">
+              ${
+                isFeatureReport
+                  ? reportData.features.length
+                  : reportData.provisions.length
+              }
+            </div>
+            <div style="font-size: 12px; color: #6b7280;">
+              ${isFeatureReport ? "Features" : "Provisions"} Analyzed
+            </div>
+          </td>
+          <td style="text-align: center; padding: 10px; width: 33.33%;">
+            <div style="font-size: 24px; font-weight: bold; color: #ef4444; margin-bottom: 8px;">
+              ${reportData.conflicts.length}
+            </div>
+            <div style="font-size: 12px; color: #6b7280;">
+              ${isFeatureReport ? "Law" : "Feature"} Conflicts Found
+            </div>
+          </td>
+          <td style="text-align: center; padding: 10px; width: 33.33%;">
+            <div style="font-size: 24px; font-weight: bold; color: #22c55e; margin-bottom: 8px;">
+              ${reportData.success ? "✓" : "✗"}
+            </div>
+            <div style="font-size: 12px; color: #6b7280;">Analysis Status</div>
+          </td>
+        </tr>
+      </table>
+    </div>
 
-      // Temporarily add to document
+    <div style="margin-top: 30px; text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 15px;">
+      This report was generated automatically by the Compliance Checker system.
+    </div>
+  `;
+
       document.body.appendChild(exportElement);
 
       // Generate canvas from the element
@@ -525,7 +524,6 @@ export default function Report() {
         );
         heightLeft -= pageHeight;
       }
-
       // Create filename with timestamp
       const timestamp = new Date().toISOString().slice(0, 10);
       const filename = `compliance-report-${reportData.type}-${timestamp}.pdf`;
@@ -535,6 +533,177 @@ export default function Report() {
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF. Please try again.");
+    }
+
+    // Helper function to generate CSV data
+    function generateCSVData() {
+      const isFeatureReport = reportData.type === "feature";
+      const timestamp = new Date().toISOString().slice(0, 10);
+      let csvContent = "";
+
+      // Report Summary Header
+      csvContent += "COMPLIANCE REPORT SUMMARY\n";
+      csvContent += `Report Type,${
+        isFeatureReport ? "Feature Analysis" : "Law Analysis"
+      }\n`;
+      csvContent += `Generated On,${new Date().toLocaleDateString()}\n`;
+      csvContent += `Total ${isFeatureReport ? "Features" : "Provisions"},${
+        isFeatureReport
+          ? reportData.features?.length || 0
+          : reportData.provisions?.length || 0
+      }\n`;
+      csvContent += `Conflicts Found,${reportData.conflicts?.length || 0}\n`;
+      csvContent += `Analysis Status,${
+        reportData.success ? "Success" : "Failed"
+      }\n`;
+      if (reportData.message) {
+        csvContent += `Message,"${reportData.message}"\n`;
+      }
+      csvContent += "\n";
+
+      // Analyzed Items Section
+      if (isFeatureReport && reportData.features?.length > 0) {
+        csvContent += "ANALYZED FEATURES\n";
+        csvContent +=
+          "Feature ID,Feature Title,Description,Type,Project Name,Project ID,Reference File\n";
+
+        reportData.features.forEach((feature) => {
+          csvContent += `${feature.feature_id},"${escapeCSV(
+            feature.feature_title
+          )}","${escapeCSV(feature.feature_description)}","${escapeCSV(
+            feature.feature_type
+          )}","${escapeCSV(feature.project_name)}",${
+            feature.project_id || ""
+          },"${escapeCSV(feature.reference_file)}"\n`;
+        });
+        csvContent += "\n";
+      } else if (!isFeatureReport && reportData.provisions?.length > 0) {
+        csvContent += "ANALYZED LAW PROVISIONS\n";
+        csvContent +=
+          "Provision ID,Provision Title,Provision Code,Provision Body,Country,Region,Law Code,Relevant Labels,Reference File\n";
+
+        reportData.provisions.forEach((provision) => {
+          const labels = provision.relevant_labels
+            ? provision.relevant_labels.join("; ")
+            : "";
+          csvContent += `${provision.id},"${escapeCSV(
+            provision.provision_title
+          )}","${escapeCSV(provision.provision_code)}","${escapeCSV(
+            provision.provision_body
+          )}","${escapeCSV(provision.country)}","${escapeCSV(
+            provision.region
+          )}","${escapeCSV(provision.law_code)}","${escapeCSV(
+            labels
+          )}","${escapeCSV(provision.reference_file)}"\n`;
+        });
+        csvContent += "\n";
+      }
+
+      // Conflicts Section
+      if (reportData.conflicts?.length > 0) {
+        csvContent += "CONFLICTS FOUND\n";
+
+        if (isFeatureReport) {
+          csvContent +=
+            "Conflict Type,Provision ID,Provision Title,Provision Code,Provision Body,Country,Region,Law Code,Relevant Labels,Reasoning,Reference File\n";
+
+          reportData.conflicts.forEach((conflict) => {
+            const isLawProvision = "provision_title" in conflict;
+            if (isLawProvision) {
+              const labels = conflict.relevant_labels
+                ? conflict.relevant_labels.join("; ")
+                : "";
+              csvContent += `Law Provision,${conflict.id || ""},"${escapeCSV(
+                conflict.provision_title
+              )}","${escapeCSV(conflict.provision_code)}","${escapeCSV(
+                conflict.provision_body
+              )}","${escapeCSV(conflict.country)}","${escapeCSV(
+                conflict.region
+              )}","${escapeCSV(conflict.law_code)}","${escapeCSV(
+                labels
+              )}","${escapeCSV(conflict.reasoning || "")}","${escapeCSV(
+                conflict.reference_file
+              )}"\n`;
+            } else {
+              csvContent += `Feature,${conflict.feature_id || ""},"${escapeCSV(
+                conflict.feature_title
+              )}","${escapeCSV(conflict.feature_type)}","${escapeCSV(
+                conflict.feature_description
+              )}","${escapeCSV(conflict.project_name)}",${
+                conflict.project_id || ""
+              },"","","${escapeCSV(conflict.reasoning || "")}","${escapeCSV(
+                conflict.reference_file
+              )}"\n`;
+            }
+          });
+        } else {
+          csvContent +=
+            "Conflict Type,Feature ID,Feature Title,Feature Type,Feature Description,Project Name,Project ID,Reasoning,Reference File\n";
+
+          reportData.conflicts.forEach((conflict) => {
+            const isLawProvision = "provision_title" in conflict;
+            if (!isLawProvision) {
+              csvContent += `Feature,${conflict.feature_id || ""},"${escapeCSV(
+                conflict.feature_title
+              )}","${escapeCSV(conflict.feature_type)}","${escapeCSV(
+                conflict.feature_description
+              )}","${escapeCSV(conflict.project_name)}",${
+                conflict.project_id || ""
+              },"${escapeCSV(conflict.reasoning || "")}","${escapeCSV(
+                conflict.reference_file
+              )}"\n`;
+            } else {
+              const labels = conflict.relevant_labels
+                ? conflict.relevant_labels.join("; ")
+                : "";
+              csvContent += `Law Provision,${conflict.id || ""},"${escapeCSV(
+                conflict.provision_title
+              )}","${escapeCSV(conflict.provision_code)}","${escapeCSV(
+                conflict.provision_body
+              )}","${escapeCSV(conflict.country)}","${escapeCSV(
+                conflict.region
+              )}","${escapeCSV(conflict.law_code)}","${escapeCSV(labels)}"\n`;
+            }
+          });
+        }
+      }
+
+      return csvContent;
+    }
+
+    // Helper function to escape CSV values
+    function escapeCSV(value) {
+      if (value === null || value === undefined) return "";
+      const stringValue = String(value);
+      // Escape quotes by doubling them and wrap in quotes if contains comma, quote, or newline
+      if (
+        stringValue.includes('"') ||
+        stringValue.includes(",") ||
+        stringValue.includes("\n")
+      ) {
+        return stringValue.replace(/"/g, '""');
+      }
+      return stringValue;
+    }
+
+    // Helper function to download CSV
+    function downloadCSV(csvContent) {
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `compliance-report-${reportData.type}-${timestamp}.csv`;
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
     }
   };
 

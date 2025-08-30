@@ -226,7 +226,7 @@ func UploadLawHandler(w http.ResponseWriter, r *http.Request) {
 
 
 	// Hardcoded provisions 
-	provision1 := models.ReasoningProvision{
+	provision1 := models.Provision{
 		ProvisionID:    1,
 		ProvisionTitle: "Section 1",
 		ProvisionBody:  "Users must consent before data collection",
@@ -236,9 +236,8 @@ func UploadLawHandler(w http.ResponseWriter, r *http.Request) {
 		RelevantLabels: []string{"consent", "privacy"},
 		LawCode:        "PDPA-201",
 		ReferenceFile:  "law1.pdf",
-		Reasoning:      "Consent is required under PDPA",
 	}
-	provision2 := models.ReasoningProvision{
+	provision2 := models.Provision{
 		ProvisionID:    2,
 		ProvisionTitle: "Section 2",
 		ProvisionBody:  "Data must be stored securely",
@@ -248,11 +247,10 @@ func UploadLawHandler(w http.ResponseWriter, r *http.Request) {
 		RelevantLabels: []string{"security", "storage"},
 		LawCode:        "PDPA-202",
 		ReferenceFile:  "law2.pdf",
-		Reasoning:      "Secure storage prevents breaches",
 	}
 
 	// Hardcoded features
-	feature1 := models.Feature{
+	feature1 := models.ReasoningFeature{
 		FeatureID:          101,
 		FeatureTitle:       "Login Feature",
 		FeatureDescription: "Secure login with multi-factor authentication",
@@ -260,8 +258,9 @@ func UploadLawHandler(w http.ResponseWriter, r *http.Request) {
 		ProjectName:        "Auth System",
 		ReferenceFile:      "feature_dataset/0000 - gamma j.pdf",
 		ProjectID:          1001,
+		Reasoning:          "Multi-factor authentication enhances security",
 	}
-	feature2 := models.Feature{
+	feature2 := models.ReasoningFeature{
 		FeatureID:          102,
 		FeatureTitle:       "Signup Feature",
 		FeatureDescription: "User registration with email verification",
@@ -269,8 +268,9 @@ func UploadLawHandler(w http.ResponseWriter, r *http.Request) {
 		ProjectName:        "Auth System",
 		ReferenceFile:      "feature_dataset/0000 - gamma j.pdf",
 		ProjectID:          1001,
+		Reasoning:          "Email verification is essential for account security",
 	}
-	feature3 := models.Feature{
+	feature3 := models.ReasoningFeature{
 		FeatureID:          103,
 		FeatureTitle:       "Profile Feature",
 		FeatureDescription: "User profile management and preferences",
@@ -278,8 +278,9 @@ func UploadLawHandler(w http.ResponseWriter, r *http.Request) {
 		ProjectName:        "Auth System",
 		ReferenceFile:      "feature_dataset/0000 - gamma j.pdf",
 		ProjectID:          1001,
+		Reasoning:          "User profile management enhances user experience",
 	}
-	feature4 := models.Feature{
+	feature4 := models.ReasoningFeature{
 		FeatureID:          104,
 		FeatureTitle:       "Notification Feature",
 		FeatureDescription: "System notifications and alerts",
@@ -287,9 +288,10 @@ func UploadLawHandler(w http.ResponseWriter, r *http.Request) {
 		ProjectName:        "Auth System",
 		ReferenceFile:      "feature_dataset/0000 - gamma j.pdf",
 		ProjectID:          1001,
+		Reasoning:          "System notifications keep users informed",
 	}
 
-	conflictMap := map[string][]models.Feature{
+	conflictMap := map[string][]models.ReasoningFeature{
 		// keys are provision IDs as strings
 		"1": {feature1, feature2}, // provision 1 conflicts with feature1/2
 		"2": {feature3, feature4}, // provision 2 conflicts with feature3/4
@@ -298,8 +300,8 @@ func UploadLawHandler(w http.ResponseWriter, r *http.Request) {
 	// Construct response
 	response := map[string]interface{}{
 		"type":       "law",
-		"provisions": []models.ReasoningProvision{provision1, provision2},
-		"conflict":   []map[string][]models.Feature{conflictMap}, // keep as slice for same shape as your spec
+		"provisions": []models.Provision{provision1, provision2},
+		"conflict":   []map[string][]models.ReasoningFeature{conflictMap}, // keep as slice for same shape as your spec
 		"message":    "law uploaded successfully",
 	}
 
