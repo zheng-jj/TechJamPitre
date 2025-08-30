@@ -10,6 +10,17 @@ type Feature struct {
 	ProjectID          int    `bson:"project_id" json:"project_id"`
 }
 
+type ReasoningFeature struct {
+	FeatureID          int    `bson:"feature_id" json:"feature_id"`
+	FeatureTitle       string `bson:"feature_title" json:"feature_title"`
+	FeatureDescription string `bson:"feature_description" json:"feature_description"`
+	FeatureType        string `bson:"feature_type" json:"feature_type"`
+	ProjectName        string `bson:"project_name" json:"project_name"`
+	ReferenceFile      string `bson:"reference_file" json:"reference_file"`
+	ProjectID          int    `bson:"project_id" json:"project_id"`
+	Reasoning          string `bson:"reasoning" json:"reasoning"`
+}
+
 type Provision struct {
 	ProvisionID    int      `bson:"provision_id" json:"id"`
 	ProvisionTitle string   `bson:"provision_title" json:"provision_title"`
