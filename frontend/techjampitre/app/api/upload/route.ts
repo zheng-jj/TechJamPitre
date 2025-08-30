@@ -20,50 +20,21 @@ export async function POST(request: NextRequest) {
     // 3. Run compliance checks against your database
     // 4. Return conflicts/violations
 
-    // Mock response based on type
     if (type === "feature") {
-      // Check feature against existing laws
-      const lawConflicts = [
-        {
-          country: "USA",
-          region: "California",
-          law: "CCPA",
-          lawDesc: "California Consumer Privacy Act",
-          relevantLabels: ["privacy", "data"],
-          source: "state-law",
-        },
-        {
-          country: "EU",
-          region: "All",
-          law: "GDPR",
-          lawDesc: "General Data Protection Regulation",
-          relevantLabels: ["privacy", "consent"],
-          source: "eu-regulation",
-        },
-      ];
-
-      return NextResponse.json({
-        type: "feature",
-        conflicts: lawConflicts,
-        message: "Feature analysis complete",
+      const response = await fetch("http://127.0.0.1:8080/upload/feature", {
+        method: "POST",
+        body: formData,
       });
+      const data = await response.json();
+      return NextResponse.json({ success: true, response: data });
     } else {
       // Check law against existing features
-      const featureConflicts = [
-        {
-          featureName: "Auto-tracking",
-          featureType: "Analytics",
-          featureDescription: "Automatic user behavior tracking",
-          relevantLabels: ["tracking", "analytics"],
-          source: "product-spec",
-        },
-      ];
-
-      return NextResponse.json({
-        type: "law",
-        conflicts: featureConflicts,
-        message: "Law analysis complete",
+      const response = await fetch("http://127.0.0.1:8080/upload/law", {
+        method: "POST",
+        body: formData,
       });
+      const data = await response.json();
+      return NextResponse.json({ success: true, response: data });
     }
   } catch (error) {
     console.error("Upload error:", error);
