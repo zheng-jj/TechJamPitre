@@ -1,4 +1,4 @@
-# Geo-Compliance Automation System
+# CoBridge
 
 A comprehensive solution for automating geo-specific regulatory compliance checks using Large Language Models (LLMs) and Retrieval-Augmented Generation (RAG). This system addresses TikTok's challenge of proactively implementing legal guardrails before feature launches by turning regulatory detection from a blind spot into a traceable, auditable output.
 
@@ -30,10 +30,58 @@ Our system transforms regulatory compliance from reactive manual processes to pr
 - **Audit Trail Generation**: Maintain complete traceability for regulatory inquiries
 - **Real-Time Processing**: Immediate analysis and feedback on uploaded documents
 
+## How we built it
+
+We architected CoBridge using a modern full-stack approach with AI at its core:
+
+Frontend: Built with React.js, Tailwind CSS, ShadCN component library, Radix UI primitives, and Framer Motion for smooth animations, creating an intuitive interface for document upload and report visualization.
+
+Backend: Implemented using FastAPI for high-performance Python APIs and Go services for efficient data processing, with MongoDB serving as our document database for compliance records and audit trails.
+
+AI Pipeline: Integrated Gemini LLM for intelligent document parsing and analysis, FAISS vector store for semantic similarity searches, and RAG (Retrieval-Augmented Generation) for context-aware compliance analysis. The system converts documents to embeddings, performs similarity matching, and uses retrieved context to generate accurate compliance assessments.
+
+Architecture: Designed a bidirectional analysis engine where each document type follows a specific processing flow – feature documents query the law database, while law documents query the feature database, enabling comprehensive cross-impact analysis.
+
+## Challenges we ran into
+
+Data Processing Complexity: Parsing diverse document formats (PDFs, Word docs, legal text) and extracting structured information required extensive preprocessing and robust error handling.
+
+Embedding Quality: Achieving accurate semantic similarity between legal language and technical feature descriptions was challenging, requiring careful tuning of similarity thresholds and embedding models.
+
+Bidirectional Logic: Implementing the dual-direction analysis (laws→features, features→laws) while maintaining data consistency and avoiding circular references required careful architectural planning.
+
+Legal Accuracy: Ensuring the AI-generated compliance analysis was reliable enough for real-world regulatory scenarios while providing clear reasoning for each recommendation.
+
+## Accomplishments that we're proud of
+
+Bidirectional Intelligence: Successfully implemented a system that works both ways – analyzing features against laws AND laws against features, providing comprehensive compliance coverage that goes beyond traditional one-directional tools.
+
+Production-Ready Architecture: Built a scalable system with proper separation of concerns, robust error handling, and audit trail capabilities suitable for enterprise deployment.
+
+Intelligent Report Generation: Created a reporting system that generates professional, actionable compliance reports with detailed reasoning, making complex legal analysis accessible to product teams.
+
+Seamless User Experience: Despite the complex AI backend, we maintained an intuitive interface where users simply upload documents and receive immediate, comprehensive analysis.
+
+Real-World Applicability: Developed a solution that directly addresses TikTok's stated needs while being generalizable to any company operating across multiple jurisdictions.
+
+## What we learned
+
+AI-Legal Integration: Discovered the nuances of applying AI to legal compliance, including the importance of providing clear reasoning and maintaining audit trails for regulatory scrutiny.
+
+Cross-Domain Analysis: Learned how to effectively bridge technical product documentation and legal regulatory language using advanced embedding techniques and RAG methodology.
+
+Scalable AI Architecture: Gained insights into building AI systems that maintain performance while handling diverse document types and complex relational queries between different data domains.
+
+User-Centered Compliance: Understood that successful compliance tools must balance comprehensive analysis with practical usability, ensuring that detailed legal insights translate into actionable guidance.
+
+Regulatory Technology Gap: Recognized the significant opportunity in applying modern AI techniques to traditional compliance processes, where manual effort currently dominates.
+
 ## Architecture
 
 ### System Flow
+
 ![alt text](<Document Processing with RAG Sequence-1.png>)
+
 #### Feature Document Upload Flow
 
 1. **Document Upload**: Users upload feature artifact documents through the web interface
