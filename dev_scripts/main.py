@@ -45,10 +45,11 @@ async def upload_law(file: UploadFile = File(...)):
         rag_law_model.update_vector_store(documents) # might error out due to api limits from free tier
         law = load_jsonl(parsed_law)
         
-        # Save all laws in one go to mongodb
-        resp = requests.post(f"{GO_BACKEND_URL}/provision", json=law)
-        if resp.status_code != 201:
-            print("Failed to save laws:", resp.text)
+        # Save all laws one by one to MongoDB
+        for provision in law:
+            resp = requests.post(f"{GO_BACKEND_URL}/provision", json=provision)
+            if resp.status_code != 201:
+                print(f"Failed to save provision {provision.get('provision_code')}: {resp.text}")
 
         law_prompt = "<law>".join(
             f'{i}. [{l["provision_code"]/l["law_code"]}] {l["provision_title"]} - {l["provision_body"]}'
@@ -85,11 +86,12 @@ async def upload_feature(file: UploadFile = File(...)):
         features = load_jsonl(parsed_feature)
         compliance = load_jsonl(parsed_compliance)
         data_dict = load_jsonl(parsed_data_dict)
-
-        # Save all features in one go to mongodb
-        resp = requests.post(f"{GO_BACKEND_URL}/feature", json=features)
-        if resp.status_code != 201:
-            print("Failed to save features:", resp.text)
+        
+        # Save all features one by one to MongoDB
+        for feature in features:
+            resp = requests.post(f"{GO_BACKEND_URL}/feature", json=feature)
+            if resp.status_code != 201:
+                print(f"Failed to save feature {feature.get('feature_title')}: {resp.text}")
 
         # Build prompts
         terminology_prompt = build_prompt(data_dict, "variable_name", "variable_description")
