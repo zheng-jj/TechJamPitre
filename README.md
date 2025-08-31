@@ -222,21 +222,33 @@ npm run dev
 
 ```bash
 # Python FastAPI backend
-cd backend/python
+cd dev_scripts
+
+py -3 -m venv .venv
+.\\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+
 uvicorn main:app --reload
 
-# Go services
-cd ../go
+# Go backend services
+cd backend
 go mod tidy
 go run main.go
 ```
 
 ### Database Configuration
 
+Launch Docker Desktop first before running the following commands
+
 ```bash
-# MongoDB setup
-mongod --dbpath /path/to/data
+
+# Setup MongoDB in Docker container
+
+docker run -d `
+  --name mongodb `
+  -p 27017:27017 `
+  -v mongodb_data:/data/db `
+  mongo:7.0
 
 # Initialize vector store with law and feature databases
 python scripts/init_vector_store.py
