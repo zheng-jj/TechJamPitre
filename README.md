@@ -250,8 +250,6 @@ docker run -d `
   -v mongodb_data:/data/db `
   mongo:7.0
 
-# Initialize vector store with law and feature databases
-python scripts/init_vector_store.py
 ```
 
 ## Usage
