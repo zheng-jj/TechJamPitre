@@ -3,6 +3,8 @@ from fastapi.responses import JSONResponse
 import os
 import json
 import requests
+import threading
+import time
 from dotenv import load_dotenv
 
 from parser.LawParser import LawParser
@@ -11,91 +13,159 @@ from model.RAGLawModel import RAGLawModel
 from model.FeatureRagModel import FeatureRagModel
 from model.utils import law_to_document, feature_to_document
 
+# Load environment variables
 load_dotenv(dotenv_path=".ENV")
 
 app = FastAPI()
 
-GO_BACKEND_URL = os.getenv("GO_BACKEND_URL") 
+GO_BACKEND_URL = os.getenv("GO_BACKEND_URL")
+SLEEP_SECONDS = 2
+BATCH_SIZE = 2
 
 rag_law_model = RAGLawModel()
 rag_feature_model = FeatureRagModel()
-def load_jsonl(jsonl_string):
-    """Load a JSONL file into a list of dicts."""
-    return [json.loads(line) for line in jsonl_string.split("\n") if line.strip()]
+
+
+def load_jsonl(jsonl_string: str):
+    """Load a JSONL string into a list of dicts."""
+    try:
+        return [json.loads(line) for line in jsonl_string.split("\n") if line.strip()]
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSONL format: {e}")
+
 
 @app.get("/")
 def root():
-    print("hello")
     return {"message": "Welcome to the python services!"}
 
+
 @app.post("/upload/law")
-async def parse_law(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files allowed")
+async def upload_law(file: UploadFile = File(...)):
+    temp_path = os.path.join("./law_dataset", os.path.basename(file.filename))
     try:
-        #!!!!!!!!! store parsed_law into nosql
-        temp_path = f"./temp/{file.filename}"
+        os.makedirs("./law_dataset", exist_ok=True)
         contents = await file.read()
-        os.makedirs("./temp", exist_ok=True)
         with open(temp_path, "wb") as f:
             f.write(contents)
+
         parsed_law = LawParser.parse(temp_path)
         documents = law_to_document(parsed_law)
-        rag_law_model.update_vector_store(documents) # might error out due to api limits from free tier
-        law = load_jsonl(parsed_law)
-        law_prompt = "<law>".join(
-            f'{i}. [{l["provision_code"]/l["law_code"]}] {l["provision_title"]} - {l["provision_body"]}'
-            for i, l in enumerate(law)
-        ) + "</law>"
-        result = rag_feature_model.prompt(law_prompt)
-        return JSONResponse(content=result)
-    finally:
-        # os.remove(temp_path)
-        pass
+
+        # Run update_vector_store in a daemon thread to avoid blocking
+        def update_vector_store_daemon():
+            try:
+                rag_law_model.update_vector_store(documents)
+            except Exception as e:
+                print("Warning: Failed to update vector store:", e)
+
+        thread = threading.Thread(target=update_vector_store_daemon)
+        thread.daemon = True
+        thread.start()
+
+        laws = load_jsonl(parsed_law)
+
+        # Save all laws one by one to MongoDB
+        for provision in laws:
+            # Fix "relevant_labels": convert string -> list of strings
+            if isinstance(provision.get("relevant_labels"), str):
+                provision["relevant_labels"] = [
+                    label.strip() for label in provision["relevant_labels"].split(",")
+                ]
+            
+            try:
+                resp = requests.post(f"{GO_BACKEND_URL}/provision", json=provision)
+                if resp.status_code != 201:
+                    print(f"Failed to save provision {provision.get('provision_code')}: {resp.text}")
+            except Exception as e:
+                print("Error sending laws to backend:", e)
+
+     
+
+        # Build prompts + retrieve docs
+        law_prompt = ""
+        raw_docs = []
+        for i in range(0, len(laws), BATCH_SIZE):
+            batch = laws[i:i + BATCH_SIZE]
+            for j, law in enumerate(batch, start=i):
+                law_prompt += f'\n{j}. [{law["provision_code"]}/{law["law_code"]}] {law["provision_title"]} - {law["provision_body"]}'
+                doc_query_prompt = f'{law["provision_title"]} - {law["provision_body"]}'
+                raw_docs.extend(rag_feature_model.retrieve_docs(doc_query_prompt))
+            
+            time.sleep(SLEEP_SECONDS)
+        docs = []
+        for doc in raw_docs:
+            if doc not in docs:
+                docs.append(doc)
+
+        result = ""
+        if docs:
+            result = rag_feature_model.prompt(law_prompt, docs)
+
+        return JSONResponse(content={'conflict': result, 'parsed_law': parsed_law})
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/upload/feature")
-async def parse_feature(file: UploadFile = File(...)):
-    def build_prompt(items, title_key, desc_key):
+async def upload_feature(file: UploadFile = File(...)):
+    def build_prompt(items, title_key: str, desc_key: str):
         """Build a numbered prompt string from list of dicts."""
-        return "\n".join(
-            f"{i}. {item[title_key]} - {item[desc_key]}"
-            for i, item in enumerate(items)
-        )
-    if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files allowed")
+        return "\n".join(f"{i}. {item[title_key]} - {item[desc_key]}" for i, item in enumerate(items))
+
+    temp_path = os.path.join("./feature_dataset", os.path.basename(file.filename))
     try:
-        temp_path = f"./temp/{file.filename}"
+        os.makedirs("./feature_dataset", exist_ok=True)
         contents = await file.read()
-        os.makedirs("./temp", exist_ok=True)
         with open(temp_path, "wb") as f:
             f.write(contents)
-        # path should be in database store**
+
+        # Parse feature file
         parsed_feature, parsed_compliance, parsed_data_dict = FeatureParser.parse(temp_path)
-        #!!!!!!!! store parsed_feature, parsed_compliance, parsed_data_dict to nosql
-        documents = feature_to_document(parsed_feature, parsed_compliance, parsed_data_dict)
-        rag_feature_model.update_vector_store(documents)
-        
+
+        # Run update_vector_store in a background daemon thread to avoid blocking
+        def update_vector_store_daemon():
+            try:
+                documents = feature_to_document(parsed_feature, parsed_compliance, parsed_data_dict)
+                rag_feature_model.update_vector_store(documents)
+            except Exception as e:
+                print("Warning: Failed to update feature vector store:", e)
+
+        thread = threading.Thread(target=update_vector_store_daemon)
+        thread.daemon = True
+        thread.start()
+
         features = load_jsonl(parsed_feature)
         compliance = load_jsonl(parsed_compliance)
         data_dict = load_jsonl(parsed_data_dict)
 
+       # Save all features one by one to MongoDB
+        for feature in features:
+            try:
+                resp = requests.post(f"{GO_BACKEND_URL}/feature", json=feature)
+                if resp.status_code != 201:
+                    print(f"Failed to save feature {feature.get('feature_title')}: {resp.text}")
+            except Exception as e:
+                print("Error sending features to backend:", e)
+
         # Build prompts
         terminology_prompt = build_prompt(data_dict, "variable_name", "variable_description")
-        compliance_prompt = build_prompt(compliance, "compliance_title", "compliance_description")
         features_prompt = build_prompt(features, "feature_title", "feature_description")
 
-        # Retrieve docs (deduplicate)
         raw_docs = []
-        for feature in features:
-            query_text = f'{feature["feature_title"]} - {feature["feature_description"]}'
-            raw_docs.extend(rag_law_model.retrieve_docs(query_text))
+        for i in range(0, len(features), BATCH_SIZE):
+            batch = features[i:i + BATCH_SIZE]
+            for feature in batch:
+                query_text = f'{feature["feature_title"]} - {feature["feature_description"]}'
+                raw_docs.extend(rag_law_model.retrieve_docs(query_text))
+            time.sleep(SLEEP_SECONDS)
+            
 
         docs = []
         for doc in raw_docs:
             if doc not in docs:
-                docs.append(doc)  # deduplicate with set
+                docs.append(doc)
 
-        # Final model prompt
+        # Final prompt
         full_prompt = f"""
             <features>
             {features_prompt}
@@ -103,16 +173,18 @@ async def parse_feature(file: UploadFile = File(...)):
             <terminology>
             {terminology_prompt}
             </terminology>
-            <compliance_already_conformed>
-            {compliance_prompt}
-            </compliance_already_conformed>
         """
 
-        result = rag_law_model.prompt(full_prompt.strip(), docs)
-        return JSONResponse(content=result)
-    finally:
-        # os.remove(temp_path)
-        pass
+        result = "{}"
+        if docs:
+            result = rag_law_model.prompt(full_prompt.strip(), docs)
+
+        return JSONResponse(content={'conflict': result, 'parsed_feature': parsed_feature})
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 if __name__ == "__main__":
     import uvicorn

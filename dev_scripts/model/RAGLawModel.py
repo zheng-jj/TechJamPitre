@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import List, Optional
+from typing import List
 
 import faiss
 from langchain_community.docstore.in_memory import InMemoryDocstore
@@ -8,6 +8,7 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from time import sleep
 
 VECTOR_STORE = "law_index"
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -18,7 +19,7 @@ SCHEMA = {
     "properties": {
         "provisions": {
             "type": "array",
-            "description": "List of all provisions the feature has violated.",
+            "description": "List of all provisions the features has violated. Multiple features can violate the same provision, ensure all feature violations are recorded.",
             "items": {
                 "type": "object",
                 "properties": {
@@ -30,8 +31,8 @@ SCHEMA = {
                     "relevant_labels": {"type": "string", "description": "relevant_labels of provision violated."},
                     "law_code": {"type": "string", "description": "law_code of provision violated."},
                     "reference_file": {"type": "string", "description": "reference_file of provision violated."},
-                    "reasoning": {"type": "string", "description": "How does the feature violate the provision"},
-                    "id" : {"type": "string", "description": "id of provivision violated."},
+                    "reasoning": {"type": "string", "description": "List out all features that has violated the provision and how does the feature violate the provision"},
+                    "provision_id" : {"type": "string", "description": "id of provivision violated."},
                 },
                 "required": [
                     "provision_title",
@@ -74,7 +75,7 @@ class RAGLawModel:
             else:
                 self.logger.info(f"Creating new vector store at {VECTOR_STORE}")
                 os.makedirs(VECTOR_STORE, exist_ok=True)
-                index = faiss.IndexFlatL2(3072)  # Dimensionality should match embedding size
+                index = faiss.IndexFlatL2(3072)
 
                 vs = FAISS(
                     embedding_function=self.embedding,
@@ -94,8 +95,7 @@ class RAGLawModel:
 
         You MUST ONLY respond with a JSON object that conforms to the 'Answer' schema.
         Your response should start with a '{{' and end with a '}}'. Do not include any other text, explanations, or markdown formatting.
-
-        The context will contain compliances that are conformed or considered, if it resolves any provision violation, ignore the violation.
+        
         If you find relevant provisions in the context, extract them according to the schema.
         If the context is empty or you cannot find any relevant provisions, you MUST return a JSON object with an empty list for the "provisions" key.
 
@@ -106,11 +106,14 @@ class RAGLawModel:
         """
         return ChatPromptTemplate.from_template(template)
 
-    def update_vector_store(self, documents: List):
+    def update_vector_store(self, documents: List, batch_size: int = 2):
         try:
-            self.vector_store.add_documents(documents)
+            for i in range(0, len(documents), batch_size):
+                batch = documents[i:i + batch_size]
+                self.vector_store.add_documents(batch)
+                sleep(2)
             self.vector_store.save_local(VECTOR_STORE)
-            self.logger.info(f"Vector store updated with {len(documents)} documents.")
+            self.logger.info(f"Vector store updated with {len(documents)} documents in batches of {batch_size}.")
         except Exception as e:
             self.logger.error(f"Error updating vector store: {e}", exc_info=True)
             raise

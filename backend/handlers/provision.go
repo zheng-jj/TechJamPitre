@@ -13,77 +13,25 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// func CreateProvision(db *mongo.Database) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		var p models.Provision
-// 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-// 			http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
-// 			return
-// 		}
-
-// 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-// 		defer cancel()
-
-// 		_, err := db.Collection("provision").InsertOne(ctx, p)
-// 		if err != nil {
-// 			http.Error(w, "Failed to insert provision: "+err.Error(), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		w.WriteHeader(http.StatusCreated)
-// 		json.NewEncoder(w).Encode(p)
-// 	}
-// }
-
 func CreateProvision(db *mongo.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		decoder := json.NewDecoder(r.Body)
-
-		// Peek first token → check if object or array
-		t, err := decoder.Token()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		var p models.Provision
+		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+			http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		switch t {
-		case json.Delim('['): // Array → InsertMany
-			var provisions []models.Provision
-			if err := decoder.Decode(&provisions); err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 
-			docs := make([]interface{}, len(provisions))
-			for i, p := range provisions {
-				docs[i] = p
-			}
-
-			_, err := db.Collection("provisions").InsertMany(context.TODO(), docs)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(provisions)
-
-		default: // Single object → InsertOne
-			var provision models.Provision
-			if err := decoder.Decode(&provision); err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			_, err := db.Collection("provisions").InsertOne(context.TODO(), provision)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(provision)
+		_, err := db.Collection("provision").InsertOne(ctx, p)
+		if err != nil {
+			http.Error(w, "Failed to insert provision: "+err.Error(), http.StatusInternalServerError)
+			return
 		}
+
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(p)
 	}
 }
 
